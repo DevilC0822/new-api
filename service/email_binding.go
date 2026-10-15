@@ -4,14 +4,15 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"html"
 	"math/big"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/setting/system_setting"
 )
 
 var (
@@ -80,7 +81,7 @@ func StartEmailBinding(identity AuthIdentity, authorization *model.AuthFlowAutho
 	if err != nil {
 		return nil, err
 	}
-	if err := sendEmailBindingCodes(state, codes); err != nil {
+	if err := sendEmailBindingCodes(user.GetSetting().Language, state, codes); err != nil {
 		// A partially delivered pair must not leave a usable change request.
 		_, _ = model.ConsumeAuthFlow(token, model.AuthFlowMatch{Purpose: model.AuthFlowPurposeEmailBinding, UserId: identity.UserID, SessionId: identity.SessionID})
 		return nil, ErrEmailBindingDelivery
@@ -118,7 +119,11 @@ func ResendAccountEmailBinding(identity AuthIdentity, token string) (*EmailBindi
 	if err != nil {
 		return nil, err
 	}
-	if err := sendEmailBindingCodes(*state, codes); err != nil {
+	lang := ""
+	if user, err := model.GetUserById(identity.UserID, false); err == nil {
+		lang = user.GetSetting().Language
+	}
+	if err := sendEmailBindingCodes(lang, *state, codes); err != nil {
 		_, _ = model.ConsumeAuthFlow(token, model.AuthFlowMatch{Purpose: model.AuthFlowPurposeEmailBinding, UserId: identity.UserID, SessionId: identity.SessionID})
 		return nil, ErrEmailBindingDelivery
 	}
@@ -177,15 +182,29 @@ func generateEmailBindingCodes(requireOld bool) (emailBindingCodes, error) {
 	return codes, nil
 }
 
-func sendEmailBindingCodes(state model.EmailBindingState, codes emailBindingCodes) error {
-	subject := common.SystemName + " — Confirm your email address"
-	content := fmt.Sprintf("<p>Confirm linking this email address to your account.</p><p>Verification code: <strong>%s</strong></p><p>This code expires in 10 minutes. If you did not request this change, do not share this code.</p>", html.EscapeString(codes.New))
-	if err := common.SendEmail(subject, state.Email, content); err != nil {
+func sendEmailBindingCodes(lang string, state model.EmailBindingState, codes emailBindingCodes) error {
+	params := map[string]any{"SystemName": common.SystemName}
+	minutes := map[string]any{"Minutes": common.VerificationValidMinutes}
+	subject := i18n.Translate(lang, i18n.MsgEmailBindingSubject, params)
+	layout := common.EmailLayout{
+		Preheader: subject,
+		Footer:    i18n.Translate(lang, i18n.MsgEmailFooter, params),
+		LogoURL:   common.EmailLogoURL(system_setting.ServerAddress),
+		SiteURL:   system_setting.ServerAddress,
+	}
+	layout.Content = common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingGreetingNew, params)) +
+		common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingCodeLabel)) +
+		common.EmailCodeBlock(codes.New) +
+		common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailBindingValidityNew, minutes))
+	if err := common.SendEmail(subject, state.Email, common.RenderEmail(layout)); err != nil {
 		return err
 	}
 	if codes.Old != "" {
-		content = fmt.Sprintf("<p>A change to your account email address was requested. Confirm replacing your current address.</p><p>Verification code: <strong>%s</strong></p><p>This code expires in 10 minutes. If you did not request this change, do not share this code and contact your administrator.</p>", html.EscapeString(codes.Old))
-		return common.SendEmail(subject, state.CurrentEmail, content)
+		layout.Content = common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingGreetingOld, params)) +
+			common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingCodeLabel)) +
+			common.EmailCodeBlock(codes.Old) +
+			common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailBindingValidityOld, minutes))
+		return common.SendEmail(subject, state.CurrentEmail, common.RenderEmail(layout))
 	}
 	return nil
 }

@@ -231,12 +231,17 @@ func SendEmailVerification(c *gin.Context) {
 	// request language.
 	systemName := map[string]any{"SystemName": common.SystemName}
 	subject := i18n.T(c, i18n.MsgEmailVerificationSubject, systemName)
-	content := fmt.Sprintf("<p>%s</p>"+
-		"<p>%s</p>"+
-		"<p>%s</p>",
-		i18n.T(c, i18n.MsgEmailVerificationGreeting, systemName),
-		i18n.T(c, i18n.MsgEmailVerificationCode, map[string]any{"Code": code}),
-		i18n.T(c, i18n.MsgEmailVerificationValidity, map[string]any{"Minutes": common.VerificationValidMinutes}))
+	greeting := i18n.T(c, i18n.MsgEmailVerificationGreeting, systemName)
+	content := common.RenderEmail(common.EmailLayout{
+		Preheader: greeting,
+		Content: common.EmailParagraph(greeting) +
+			common.EmailParagraph(i18n.T(c, i18n.MsgEmailVerificationCode)) +
+			common.EmailCodeBlock(code) +
+			common.EmailMutedParagraph(i18n.T(c, i18n.MsgEmailVerificationValidity, map[string]any{"Minutes": common.VerificationValidMinutes})),
+		Footer:  i18n.T(c, i18n.MsgEmailFooter, systemName),
+		LogoURL: common.EmailLogoURL(system_setting.ServerAddress),
+		SiteURL: system_setting.ServerAddress,
+	})
 	err = common.SendEmail(subject, email, content)
 	if err != nil {
 		common.ApiError(c, err)
@@ -266,14 +271,17 @@ func SendPasswordResetEmail(c *gin.Context) {
 		systemName := map[string]any{"SystemName": common.SystemName}
 		linkParams := map[string]any{"Link": link}
 		subject := i18n.Translate(lang, i18n.MsgEmailPasswordResetSubject, systemName)
-		content := fmt.Sprintf("<p>%s</p>"+
-			"<p>%s</p>"+
-			"<p>%s </p>"+
-			"<p>%s</p>",
-			i18n.Translate(lang, i18n.MsgEmailPasswordResetGreeting, systemName),
-			i18n.Translate(lang, i18n.MsgEmailPasswordResetLink, linkParams),
-			i18n.Translate(lang, i18n.MsgEmailPasswordResetLinkFallback, linkParams),
-			i18n.Translate(lang, i18n.MsgEmailPasswordResetValidity, map[string]any{"Minutes": common.VerificationValidMinutes}))
+		greeting := i18n.Translate(lang, i18n.MsgEmailPasswordResetGreeting, systemName)
+		content := common.RenderEmail(common.EmailLayout{
+			Preheader: greeting,
+			Content: common.EmailParagraph(greeting) +
+				common.EmailActionButton(i18n.Translate(lang, i18n.MsgEmailPasswordResetLink), link) +
+				common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailPasswordResetLinkFallback, linkParams)) +
+				common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailPasswordResetValidity, map[string]any{"Minutes": common.VerificationValidMinutes})),
+			Footer:  i18n.Translate(lang, i18n.MsgEmailFooter, systemName),
+			LogoURL: common.EmailLogoURL(system_setting.ServerAddress),
+			SiteURL: system_setting.ServerAddress,
+		})
 		err := common.SendEmail(subject, email, content)
 		if err != nil {
 			logger.LogError(c.Request.Context(), common.LogText("failed to send password reset email to %s: %s", email, err.Error()))

@@ -252,6 +252,7 @@ func withSMTPSettings(t *testing.T) {
 	originalSMTPFrom := SMTPFrom
 	originalSMTPToken := SMTPToken
 	originalSystemName := SystemName
+	originalLogo := Logo
 
 	t.Cleanup(func() {
 		SMTPServer = originalSMTPServer
@@ -264,7 +265,78 @@ func withSMTPSettings(t *testing.T) {
 		SMTPFrom = originalSMTPFrom
 		SMTPToken = originalSMTPToken
 		SystemName = originalSystemName
+		Logo = originalLogo
 	})
+}
+
+func TestRenderEmailWrapsContentInBrandedShell(t *testing.T) {
+	withSMTPSettings(t)
+	SystemName = "MIHOUO · 弥火"
+
+	doc := RenderEmail(EmailLayout{
+		Preheader: "preview <text>",
+		Content:   "<p>body</p>",
+		Footer:    "footer line",
+		LogoURL:   "https://cdn.example.com/logo.png",
+		SiteURL:   "https://api.example.com",
+	})
+
+	require.Contains(t, doc, "<p>body</p>")
+	require.Contains(t, doc, "background-color:#F8F7F3")
+	require.Contains(t, doc, `src="https://cdn.example.com/logo.png"`)
+	require.Contains(t, doc, "footer line")
+	require.Contains(t, doc, `href="https://api.example.com"`)
+	// The preheader is escaped and hidden from the message body view.
+	require.Contains(t, doc, "preview &lt;text&gt;")
+	require.Contains(t, doc, "mso-hide:all")
+	// XHTML doctype keeps Outlook/Word-engine clients in standards mode.
+	require.True(t, strings.HasPrefix(doc, "<!DOCTYPE html"))
+}
+
+func TestRenderEmailFallsBackToWordmarkWithoutLogo(t *testing.T) {
+	withSMTPSettings(t)
+	SystemName = "MIHOUO"
+
+	doc := RenderEmail(EmailLayout{Content: "x"})
+	require.Contains(t, doc, "MIHOUO")
+	require.NotContains(t, doc, "<img")
+}
+
+func TestEmailCodeBlockIsCopyFriendly(t *testing.T) {
+	block := EmailCodeBlock("510b32")
+	require.Contains(t, block, ">510b32</span>")
+	require.Contains(t, block, "user-select:all")
+	require.Contains(t, block, "letter-spacing")
+	require.Contains(t, block, "font-size:30px")
+
+	// Codes are escaped before embedding.
+	require.Contains(t, EmailCodeBlock(`<b>`), "&lt;b&gt;")
+}
+
+func TestEmailActionButtonEscapesTarget(t *testing.T) {
+	button := EmailActionButton(`Reset "now"`, "https://a.b/c?x=1&y=2")
+	require.Contains(t, button, `href="https://a.b/c?x=1&amp;y=2"`)
+	require.Contains(t, button, "Reset &#34;now&#34;")
+	require.Contains(t, button, "border-radius:999px")
+}
+
+func TestEmailLogoURLResolution(t *testing.T) {
+	withSMTPSettings(t)
+
+	Logo = "https://cdn.example.com/logo.png"
+	require.Equal(t, "https://cdn.example.com/logo.png", EmailLogoURL("https://site.example.com"))
+
+	Logo = "/logo.png"
+	require.Equal(t, "https://site.example.com/logo.png", EmailLogoURL("https://site.example.com/"))
+
+	Logo = ""
+	require.Empty(t, EmailLogoURL("https://site.example.com"))
+
+	Logo = "data:image/png;base64,AAAA"
+	require.Empty(t, EmailLogoURL("https://site.example.com"))
+
+	Logo = "/logo.png"
+	require.Empty(t, EmailLogoURL(""))
 }
 
 func TestSendEmailUsesExplicitStartTLSWithInsecureCertificate(t *testing.T) {

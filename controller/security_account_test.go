@@ -322,7 +322,9 @@ func (mailbox *securityMailbox) code(t *testing.T, receiver string) string {
 	mailbox.mutex.Lock()
 	defer mailbox.mutex.Unlock()
 	for index := len(mailbox.mail[receiver]) - 1; index >= 0; index-- {
-		match := regexp.MustCompile(`<strong>([0-9]{6})</strong>`).FindStringSubmatch(mailbox.mail[receiver][index])
+		// The code is rendered as a six-digit text node inside the branded code
+		// card; matching the digits keeps this test independent of markup.
+		match := regexp.MustCompile(`>([0-9]{6})<`).FindStringSubmatch(mailbox.mail[receiver][index])
 		if len(match) == 2 {
 			return match[1]
 		}

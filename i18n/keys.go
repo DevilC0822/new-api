@@ -64,6 +64,15 @@ const (
 	MsgEmailPasswordResetLink         = "email.password_reset.link"
 	MsgEmailPasswordResetLinkFallback = "email.password_reset.link_fallback"
 	MsgEmailPasswordResetValidity     = "email.password_reset.validity"
+
+	MsgEmailBindingSubject     = "email.binding.subject"
+	MsgEmailBindingGreetingNew = "email.binding.greeting_new"
+	MsgEmailBindingGreetingOld = "email.binding.greeting_old"
+	MsgEmailBindingCodeLabel   = "email.binding.code_label"
+	MsgEmailBindingValidityNew = "email.binding.validity_new"
+	MsgEmailBindingValidityOld = "email.binding.validity_old"
+
+	MsgEmailFooter = "email.footer"
 )
 
 // Low-quota notices, in the recipient's saved language

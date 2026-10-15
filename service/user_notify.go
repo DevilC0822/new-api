@@ -3,11 +3,13 @@ package service
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/relaykit/dto"
 	"github.com/QuantumNous/new-api/setting/system_setting"
@@ -77,7 +79,7 @@ func NotifyUser(userId int, userEmail string, userSetting dto.UserSetting, data 
 			common.SysLog(common.LogText("user %d has no email, skip sending email", userId))
 			return nil
 		}
-		return sendEmailNotify(emailToUse, data)
+		return sendEmailNotify(emailToUse, userSetting.Language, data)
 	case dto.NotifyTypeWebhook:
 		webhookURLStr := userSetting.WebhookUrl
 		if webhookURLStr == "" {
@@ -107,13 +109,25 @@ func NotifyUser(userId int, userEmail string, userSetting dto.UserSetting, data 
 	return nil
 }
 
-func sendEmailNotify(userEmail string, data dto.Notify) error {
+func sendEmailNotify(userEmail string, lang string, data dto.Notify) error {
 	// make email content
 	content := data.Content
 	// 处理占位符
 	for _, value := range data.Values {
 		content = strings.Replace(content, dto.ContentValueParam, fmt.Sprintf("%v", value), 1)
 	}
+	// Plain-text payloads (e.g. the upstream update digest) become line-broken
+	// HTML; fragments already authored as HTML pass through unchanged.
+	if !strings.Contains(content, "<") {
+		content = strings.ReplaceAll(html.EscapeString(content), "\n", "<br>")
+	}
+	content = common.RenderEmail(common.EmailLayout{
+		Preheader: data.Title,
+		Content:   common.EmailParagraph(content),
+		Footer:    i18n.Translate(lang, i18n.MsgEmailFooter, map[string]any{"SystemName": common.SystemName}),
+		LogoURL:   common.EmailLogoURL(system_setting.ServerAddress),
+		SiteURL:   system_setting.ServerAddress,
+	})
 	return common.SendEmail(data.Title, userEmail, content)
 }
 
