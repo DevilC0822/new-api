@@ -119,15 +119,21 @@ export function PublicHeader(props: PublicHeaderProps) {
   if (customLogo) logoContent = customLogo
   if (loading) logoContent = <Skeleton className='size-full rounded-lg' />
 
-  let authContent = (
+  // The "Go to Dashboard" CTA is redundant when the nav already links to the
+  // console (non-home pages); keep it on the landing anchor nav and always
+  // show the "Sign in" entry for guests.
+  const hasConsoleNavLink = links.some((link) => link.href === '/dashboard')
+  const showAuthCta = !isAuthenticated || !hasConsoleNavLink
+
+  let authContent = showAuthCta ? (
     <Link
       to={isAuthenticated ? '/dashboard' : '/sign-in'}
-      className='border-black/15 bg-white/80 text-[#141413] hover:border-black/35 hover:bg-white dark:border-white/20 dark:bg-zinc-900/80 dark:text-zinc-100 inline-flex h-9 items-center gap-1.5 rounded-full border px-4.5 text-[13px] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-200'
+      className='inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-black/15 bg-white/80 px-4.5 text-[13px] font-medium whitespace-nowrap text-[#141413] shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-black/35 hover:bg-white dark:border-white/20 dark:bg-zinc-900/80 dark:text-zinc-100'
     >
-      <span>{isAuthenticated ? t('Go to Dashboard') : t('Access Gateway')}</span>
+      <span>{isAuthenticated ? t('Go to Dashboard') : t('Sign in')}</span>
       <ArrowRight className='size-3.5' />
     </Link>
-  )
+  ) : null
   if (isAuthenticated) {
     authContent = (
       <div className='flex items-center gap-2.5'>
@@ -230,7 +236,7 @@ export function PublicHeader(props: PublicHeaderProps) {
           <span className='font-serif text-[20px] font-normal tracking-[0.26em] text-[#141413] dark:text-[#F4F1EA]'>
             MIHOUO
           </span>
-          <span className='bg-black/15 dark:bg-white/20 h-3.5 w-px' />
+          <span className='h-3.5 w-px bg-black/15 dark:bg-white/20' />
           <span className='font-serif text-[13px] tracking-[0.18em] text-[#3F3F3C] dark:text-zinc-300'>
             弥火
           </span>
@@ -262,15 +268,30 @@ export function PublicHeader(props: PublicHeaderProps) {
             )}
           >
             {/* Brand Lockup matching Reference Image: 3D Polyhedron Crystal + M I H O U O + api.mihouo.com */}
-            <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-3 lg:min-w-52'>
+            <div
+              className={cn(
+                '@container/system-brand flex min-w-0 flex-1 items-center gap-3',
+                !scrolled && 'lg:min-w-52'
+              )}
+            >
               <Link
                 to={homeUrl}
-                className='group flex min-w-0 items-center gap-3.5'
+                className={cn(
+                  'group flex min-w-0 items-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                  scrolled ? 'gap-0' : 'gap-3.5'
+                )}
               >
                 <div className='flex size-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105'>
                   {logoContent}
                 </div>
-                {brandContent}
+                <div
+                  className={cn(
+                    'flex min-w-0 items-center overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                    scrolled ? 'max-w-0 opacity-0' : 'max-w-60 opacity-100'
+                  )}
+                >
+                  {brandContent}
+                </div>
               </Link>
             </div>
 
@@ -322,7 +343,7 @@ export function PublicHeader(props: PublicHeaderProps) {
               {(showLanguageSwitcher ||
                 showThemeSwitch ||
                 showNotifications) && (
-                <div className='bg-black/10 dark:bg-white/10 mx-1.5 h-4 w-px' />
+                <div className='mx-1.5 h-4 w-px bg-black/10 dark:bg-white/10' />
               )}
 
               {showLanguageSwitcher && <LanguageSwitcher />}
@@ -340,7 +361,9 @@ export function PublicHeader(props: PublicHeaderProps) {
                 />
               )}
 
-              {showAuthButtons && <div className='ml-2'>{authContent}</div>}
+              {showAuthButtons && (
+                <div className='ml-2 shrink-0'>{authContent}</div>
+              )}
             </div>
 
             {/* Mobile: compact actions + hamburger */}
@@ -449,13 +472,13 @@ export function PublicHeader(props: PublicHeaderProps) {
             )}
             style={{ transitionDelay: mobileOpen ? '250ms' : '0ms' }}
           >
-            {showAuthButtons && (
+            {showAuthButtons && showAuthCta && (
               <Link
                 to={isAuthenticated ? '/dashboard' : '/sign-in'}
                 onClick={() => setMobileOpen(false)}
-                className='bg-foreground text-background inline-flex h-10 items-center justify-center rounded-full text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80'
+                className='bg-foreground text-background inline-flex h-10 items-center justify-center rounded-full text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-90 active:opacity-80'
               >
-                {isAuthenticated ? t('Go to Dashboard') : t('Access Gateway')}
+                {isAuthenticated ? t('Go to Dashboard') : t('Sign in')}
               </Link>
             )}
           </div>

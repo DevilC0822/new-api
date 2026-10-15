@@ -65,12 +65,11 @@ export function useTopNavLinks(): TopNavLink[] {
 
   const links: TopNavLink[] = []
 
-  // 首页采用设计稿的锚点导航：首页 / 模型与费率 / 接入指南 / 服务状态
+  // 首页采用设计稿的锚点导航：首页 / 模型与费率 / 接入指南
   if (pathname === '/') {
     links.push({ title: t('Home'), href: '/' })
     links.push({ title: t('模型与费率'), href: '#models-section' })
     links.push({ title: t('接入指南'), href: '#client-integration-hub' })
-    links.push({ title: t('服务状态'), href: '#' })
     return links
   }
 

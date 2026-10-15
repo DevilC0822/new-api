@@ -21,6 +21,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
+import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { DEFAULT_GATEWAY_ORIGIN } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -271,6 +272,34 @@ const msg = await client.messages.create({
   },
 ]
 
+const STATUS_HINTS: Array<{
+  code: string
+  title: string
+  description: string
+  variant: 'outline' | 'warning' | 'destructive'
+  badgeClassName?: string
+}> = [
+  {
+    code: '200 OK',
+    title: '连接正常',
+    description: '已直连上游模型',
+    variant: 'outline',
+    badgeClassName: 'border-success/30 bg-success/10 text-success',
+  },
+  {
+    code: '401 Auth',
+    title: '鉴权失败',
+    description: '请检查密钥或 Base URL 格式',
+    variant: 'warning',
+  },
+  {
+    code: '429 / 529',
+    title: '并发超限',
+    description: '上游繁忙，自动切换热备通道',
+    variant: 'destructive',
+  },
+]
+
 export function HowItWorks() {
   const { t } = useTranslation()
   const { copyToClipboard } = useCopyToClipboard()
@@ -316,7 +345,7 @@ export function HowItWorks() {
           <div className='border-border bg-card overflow-hidden rounded-[22px] border shadow-[0_24px_52px_-14px_rgba(20,20,18,0.065)]'>
             <div className='grid grid-cols-1 lg:grid-cols-12'>
               {/* Left Column: Client Switcher Sidebar (4 cols) */}
-              <div className='border-border bg-[#F8F7F3] flex flex-col justify-between border-b p-5 md:p-6 lg:col-span-4 lg:border-r lg:border-b-0 dark:bg-zinc-900/65'>
+              <div className='border-border flex flex-col justify-between border-b bg-[#F8F7F3] p-5 md:p-6 lg:col-span-4 lg:border-r lg:border-b-0 dark:bg-zinc-900/65'>
                 <div>
                   <div className='border-border/80 mb-3.5 flex items-center justify-between border-b pb-3'>
                     <div className='flex items-center gap-2'>
@@ -413,8 +442,7 @@ export function HowItWorks() {
                     {DEFAULT_GATEWAY_ORIGIN}
                   </div>
                   <p className='text-muted-foreground mt-2 text-[11px] leading-[1.55]'>
-                    兼容带或不带{' '}
-                    <code className='font-mono'>/v1</code>{' '}
+                    兼容带或不带 <code className='font-mono'>/v1</code>{' '}
                     后缀，请避免重复拼接{' '}
                     <code className='font-mono'>/v1/v1</code>。
                   </p>
@@ -468,7 +496,7 @@ export function HowItWorks() {
                       </span>
                     </div>
 
-                    <div className='border-border bg-[#F8F7F3] flex flex-col justify-between gap-3 rounded-[14px] border p-4 sm:flex-row sm:items-center dark:bg-zinc-900/60'>
+                    <div className='border-border flex flex-col justify-between gap-3 rounded-[14px] border bg-[#F8F7F3] p-4 sm:flex-row sm:items-center dark:bg-zinc-900/60'>
                       <div className='min-w-0'>
                         <div className='text-muted-foreground text-[11px]'>
                           当前客户端 Base URL
@@ -514,7 +542,7 @@ export function HowItWorks() {
                         </span>
                       </div>
 
-                      <div className='border-border bg-[#F6F5F0] inline-flex rounded-full border p-0.5 dark:bg-zinc-800'>
+                      <div className='border-border inline-flex rounded-full border bg-[#F6F5F0] p-0.5 dark:bg-zinc-800'>
                         <button
                           type='button'
                           onClick={() => setConfigTab('env')}
@@ -600,7 +628,7 @@ export function HowItWorks() {
                       </span>
                     </div>
 
-                    <div className='border-border bg-[#F8F7F3] overflow-hidden rounded-[14px] border dark:bg-zinc-900/60'>
+                    <div className='border-border overflow-hidden rounded-[14px] border bg-[#F8F7F3] dark:bg-zinc-900/60'>
                       <div className='border-border/70 flex items-center justify-between border-b px-4 py-2'>
                         <span className='text-muted-foreground font-mono text-[11px]'>
                           cURL 连通性测试
@@ -633,31 +661,28 @@ export function HowItWorks() {
                 </div>
 
                 {/* Bottom Status Code & Troubleshooting Strip */}
-                <div className='border-border/80 mt-6 grid grid-cols-1 gap-3 border-t pt-4 sm:grid-cols-3'>
-                  <div className='flex items-center gap-2 text-[11.5px]'>
-                    <span className='border-border bg-background text-foreground rounded px-1.5 py-0.5 font-mono text-[10.5px] font-semibold'>
-                      200 OK
-                    </span>
-                    <span className='text-muted-foreground'>
-                      连接正常，已直连上游模型
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2 text-[11.5px]'>
-                    <span className='border-border bg-background text-foreground rounded px-1.5 py-0.5 font-mono text-[10.5px] font-semibold'>
-                      401 Auth
-                    </span>
-                    <span className='text-muted-foreground'>
-                      请检查密钥或 Base URL 格式
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2 text-[11.5px]'>
-                    <span className='border-border bg-background text-foreground rounded px-1.5 py-0.5 font-mono text-[10.5px] font-semibold'>
-                      429 / 529
-                    </span>
-                    <span className='text-muted-foreground'>
-                      并发超限或繁忙，自动切换热备
-                    </span>
-                  </div>
+                <div className='border-border/80 mt-6 grid grid-cols-1 gap-2.5 border-t pt-5 sm:grid-cols-3'>
+                  {STATUS_HINTS.map((status) => (
+                    <div
+                      key={status.code}
+                      className='border-border/70 rounded-[12px] border bg-[#F8F7F3] px-3.5 py-3 dark:bg-zinc-900/60'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <Badge
+                          variant={status.variant}
+                          className={cn('font-mono', status.badgeClassName)}
+                        >
+                          {status.code}
+                        </Badge>
+                        <span className='text-foreground text-[12px] font-semibold'>
+                          {status.title}
+                        </span>
+                      </div>
+                      <p className='text-muted-foreground mt-1.5 text-[11.5px] leading-[1.6]'>
+                        {status.description}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

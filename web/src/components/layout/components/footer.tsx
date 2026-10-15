@@ -119,7 +119,7 @@ function ProjectAttribution(props: { currentYear: number; inline?: boolean }) {
   const { t } = useTranslation()
   const content = (
     <span className='text-muted-foreground font-mono text-[11.5px]'>
-      {t('服务状态')} · {t('隐私承诺')}
+      {t('隐私承诺')}
     </span>
   )
   if (props.inline) {
@@ -212,9 +212,6 @@ export function Footer(props: FooterProps) {
             {props.copyright ?? t('footer.defaultCopyright')}
           </div>
           <div className='text-muted-foreground flex items-center gap-6 text-[12.5px]'>
-            <a href='#' className='hover:text-foreground transition-colors'>
-              {t('服务状态')}
-            </a>
             <a
               href='#client-integration-hub'
               className='hover:text-foreground transition-colors'
