@@ -72,14 +72,6 @@ export function Home() {
     if (isUrl) {
       return (
         <PublicLayout showMainContainer={false}>
-          {/*
-            allow-top-navigation-by-user-activation: the custom home page URL is
-            admin-configured (trusted); this lets its target="_top" nav/menu links
-            navigate the top-level window on user click. The default sandbox blocks
-            this on desktop, while some mobile browsers allow it via allow-popups,
-            causing inconsistent behavior. This token only permits user-activated
-            top-level navigation and does NOT grant same-origin access.
-          */}
           <iframe
             ref={iframeRef}
             src={content}
@@ -109,7 +101,7 @@ export function Home() {
 
     return (
       <PublicLayout>
-        <div className='mx-auto max-w-6xl px-4 py-8'>
+        <div className='mx-auto max-w-[1280px] px-6 py-8 md:px-12'>
           <RichContent
             mode='markdown'
             content={content}
@@ -121,13 +113,19 @@ export function Home() {
   }
 
   return (
-    <PublicLayout showMainContainer={false}>
-      <Hero isAuthenticated={isAuthenticated} />
-      <Stats />
-      <Features />
-      <HowItWorks />
-      <CTA isAuthenticated={isAuthenticated} />
-      <Footer />
+    <PublicLayout
+      showMainContainer={false}
+      showThemeSwitch={false}
+      headerProps={{ showLanguageSwitcher: false, showNotifications: false }}
+    >
+      <div className='min-h-svh bg-[#f3f2ed] dark:bg-zinc-950'>
+        <Hero isAuthenticated={isAuthenticated} />
+        <Stats />
+        <Features />
+        <HowItWorks />
+        <CTA isAuthenticated={isAuthenticated} />
+        <Footer slim />
+      </div>
     </PublicLayout>
   )
 }

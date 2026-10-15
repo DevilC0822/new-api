@@ -17,9 +17,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { ArrowRight } from 'lucide-react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Logo } from '@/assets/logo'
 import { Dialog } from '@/components/dialog'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
@@ -27,10 +29,10 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { SystemUpdateAction } from '@/features/system-update/system-update-action'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
+import { DEFAULT_LOGO, DEFAULT_SYSTEM_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -96,31 +98,45 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   const user = auth.user
   const isAuthenticated = !!user
-  const displaySiteName = customSiteName || systemName
+  const rawSiteName = customSiteName || systemName || DEFAULT_SYSTEM_NAME
+  const isDefaultBrand =
+    rawSiteName === 'New API' ||
+    rawSiteName === DEFAULT_SYSTEM_NAME ||
+    rawSiteName.toUpperCase().startsWith('MIHOUO')
   const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
 
-  let logoContent: ReactNode = (
-    <HeaderLogo
-      src={systemLogo}
-      loading={loading}
-      logoLoaded={logoLoaded}
-      className='size-full rounded-lg object-contain'
-    />
-  )
+  let logoContent: ReactNode =
+    !systemLogo || systemLogo === DEFAULT_LOGO ? (
+      <Logo className='size-10 text-[#18181B] dark:text-zinc-100' />
+    ) : (
+      <HeaderLogo
+        src={systemLogo}
+        loading={loading}
+        logoLoaded={logoLoaded}
+        className='size-full rounded-lg object-contain'
+      />
+    )
   if (customLogo) logoContent = customLogo
   if (loading) logoContent = <Skeleton className='size-full rounded-lg' />
 
   let authContent = (
-    <Button
-      size='sm'
-      className='h-8 rounded-lg px-3.5 text-xs font-medium'
-      render={<Link to='/sign-in' />}
+    <Link
+      to={isAuthenticated ? '/dashboard' : '/sign-in'}
+      className='border-black/15 bg-white/80 text-[#141413] hover:border-black/35 hover:bg-white dark:border-white/20 dark:bg-zinc-900/80 dark:text-zinc-100 inline-flex h-9 items-center gap-1.5 rounded-full border px-4.5 text-[13px] font-medium shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-200'
     >
-      {t('Sign in')}
-    </Button>
+      <span>{isAuthenticated ? t('Go to Dashboard') : t('Access Gateway')}</span>
+      <ArrowRight className='size-3.5' />
+    </Link>
   )
-  if (isAuthenticated) authContent = <ProfileDropdown />
-  if (loading) authContent = <Skeleton className='h-8 w-20 rounded-lg' />
+  if (isAuthenticated) {
+    authContent = (
+      <div className='flex items-center gap-2.5'>
+        {authContent}
+        <ProfileDropdown />
+      </div>
+    )
+  }
+  if (loading) authContent = <Skeleton className='h-9 w-28 rounded-full' />
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -197,63 +213,85 @@ export function PublicHeader(props: PublicHeaderProps) {
     [t]
   )
 
+  let brandContent: ReactNode = (
+    <span
+      className='max-w-48 truncate font-serif text-lg font-normal tracking-wide'
+      title={rawSiteName}
+    >
+      {rawSiteName}
+    </span>
+  )
+  if (loading) {
+    brandContent = <Skeleton className='h-5 w-28' />
+  } else if (isDefaultBrand) {
+    brandContent = (
+      <div className='flex flex-col leading-none'>
+        <div className='flex items-center gap-2.5'>
+          <span className='font-serif text-[20px] font-normal tracking-[0.26em] text-[#141413] dark:text-[#F4F1EA]'>
+            MIHOUO
+          </span>
+          <span className='bg-black/15 dark:bg-white/20 h-3.5 w-px' />
+          <span className='font-serif text-[13px] tracking-[0.18em] text-[#3F3F3C] dark:text-zinc-300'>
+            弥火
+          </span>
+        </div>
+        <span className='mt-1 text-[11.5px] tracking-[0.02em] text-[#6E6E68] dark:text-zinc-400'>
+          api.mihouo.com
+        </span>
+      </div>
+    )
+  }
+
   return (
     <>
       <header className='pointer-events-none fixed inset-x-0 top-0 z-50'>
         <div
           className={cn(
             'pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-            scrolled ? 'max-w-[52rem] px-3 pt-3' : 'max-w-7xl px-4 pt-0 md:px-6'
+            scrolled
+              ? 'max-w-[64rem] px-4 pt-3'
+              : 'max-w-[1280px] px-6 pt-4 md:px-12'
           )}
         >
           <nav
             className={cn(
-              'flex items-center justify-between gap-2 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
+              'flex items-center justify-between gap-4 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
               scrolled
-                ? 'bg-background/60 ring-border/50 h-12 rounded-2xl pr-1.5 pl-4 shadow-[0_2px_16px_-6px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.02)] ring-[0.5px] backdrop-blur-2xl dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.4)]'
-                : 'h-16 px-2'
+                ? 'bg-background/85 ring-border/70 h-14 rounded-full pr-3 pl-5 shadow-[0_8px_30px_-8px_rgba(20,20,22,0.08)] ring-[0.5px] backdrop-blur-2xl dark:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.45)]'
+                : 'h-16 px-0'
             )}
           >
-            {/* Logo */}
-            <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-1 lg:min-w-36'>
+            {/* Brand Lockup matching Reference Image: 3D Polyhedron Crystal + M I H O U O + api.mihouo.com */}
+            <div className='@container/system-brand flex min-w-0 flex-1 items-center gap-3 lg:min-w-52'>
               <Link
                 to={homeUrl}
-                className='group flex min-w-0 items-center gap-2.5'
+                className='group flex min-w-0 items-center gap-3.5'
               >
-                <div className='flex size-7 shrink-0 items-center justify-center transition-all duration-300 group-hover:scale-105'>
+                <div className='flex size-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105'>
                   {logoContent}
                 </div>
-                <span
-                  className='max-w-48 truncate text-sm font-semibold tracking-tight'
-                  title={displaySiteName}
-                >
-                  {loading ? (
-                    <Skeleton className='h-4 w-16' />
-                  ) : (
-                    displaySiteName
-                  )}
-                </span>
+                {brandContent}
               </Link>
-              <SystemUpdateAction presentation='version' />
             </div>
 
             {/* Desktop nav */}
-            <div className='hidden min-w-0 items-center gap-0.5 lg:flex'>
+            <div className='hidden min-w-0 items-center gap-2 lg:flex'>
               {links.map((link) => {
                 const isActive = pathname === link.href
-                if (link.external) {
+                const isAnchor = link.href.startsWith('#')
+                if (link.external || isAnchor) {
                   return (
                     <a
                       key={`${link.title}:${link.href}`}
                       href={link.href}
                       title={t(link.title)}
-                      target='_blank'
-                      rel='noopener noreferrer'
+                      target={isAnchor ? undefined : '_blank'}
+                      rel={isAnchor ? undefined : 'noopener noreferrer'}
                       aria-disabled={link.disabled}
                       tabIndex={link.disabled ? -1 : undefined}
                       onClick={(event) => handleNavLinkClick(event, link)}
                       className={cn(
-                        'text-muted-foreground hover:text-foreground min-w-0 truncate rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
+                        'min-w-0 truncate rounded-full px-3.5 py-1.5 text-[13.5px] font-medium text-[#18181B]/80 transition-colors duration-200 hover:text-[#18181B] dark:text-zinc-300 dark:hover:text-white',
                         link.disabled && 'pointer-events-none opacity-50'
                       )}
                     >
@@ -269,10 +307,10 @@ export function PublicHeader(props: PublicHeaderProps) {
                     disabled={link.disabled}
                     onClick={(event) => handleNavLinkClick(event, link)}
                     className={cn(
-                      'min-w-0 truncate rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
+                      'min-w-0 truncate rounded-full px-3.5 py-1.5 text-[13.5px] font-medium transition-colors duration-200',
                       isActive
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
+                        ? 'text-[#141413] dark:text-white'
+                        : 'text-[#18181B]/75 hover:text-[#141413] dark:text-zinc-300 dark:hover:text-white',
                       link.disabled && 'pointer-events-none opacity-50'
                     )}
                   >
@@ -284,12 +322,12 @@ export function PublicHeader(props: PublicHeaderProps) {
               {(showLanguageSwitcher ||
                 showThemeSwitch ||
                 showNotifications) && (
-                <div className='bg-border/40 mx-2 h-4 w-px' />
+                <div className='bg-black/10 dark:bg-white/10 mx-1.5 h-4 w-px' />
               )}
 
               {showLanguageSwitcher && <LanguageSwitcher />}
               {showThemeSwitch && <ThemeSwitch />}
-              {showNotifications && (
+              {showNotifications && isAuthenticated && (
                 <NotificationPopover
                   open={notifications.popoverOpen}
                   onOpenChange={notifications.setPopoverOpen}
@@ -302,12 +340,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                 />
               )}
 
-              {showAuthButtons && (
-                <>
-                  <div className='bg-border/40 mx-1 h-4 w-px' />
-                  {authContent}
-                </>
-              )}
+              {showAuthButtons && <div className='ml-2'>{authContent}</div>}
             </div>
 
             {/* Mobile: compact actions + hamburger */}
@@ -374,13 +407,14 @@ export function PublicHeader(props: PublicHeaderProps) {
               const transitionStyle = {
                 transitionDelay: mobileOpen ? `${100 + i * 50}ms` : '0ms',
               }
-              if (link.external) {
+              const isAnchor = link.href.startsWith('#')
+              if (link.external || isAnchor) {
                 return (
                   <a
                     key={`${link.title}:${link.href}`}
                     href={link.href}
-                    target='_blank'
-                    rel='noopener noreferrer'
+                    target={isAnchor ? undefined : '_blank'}
+                    rel={isAnchor ? undefined : 'noopener noreferrer'}
                     aria-disabled={link.disabled}
                     tabIndex={link.disabled ? -1 : undefined}
                     onClick={(event) => handleNavLinkClick(event, link, true)}
@@ -419,9 +453,9 @@ export function PublicHeader(props: PublicHeaderProps) {
               <Link
                 to={isAuthenticated ? '/dashboard' : '/sign-in'}
                 onClick={() => setMobileOpen(false)}
-                className='bg-foreground text-background inline-flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80'
+                className='bg-foreground text-background inline-flex h-10 items-center justify-center rounded-full text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80'
               >
-                {isAuthenticated ? t('Go to Dashboard') : t('Sign in')}
+                {isAuthenticated ? t('Go to Dashboard') : t('Access Gateway')}
               </Link>
             )}
           </div>

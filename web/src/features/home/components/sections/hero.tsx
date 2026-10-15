@@ -16,13 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { CherryStudio } from '@lobehub/icons'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, BookOpen } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-import { useStatus } from '@/hooks/use-status'
+import { cn } from '@/lib/utils'
 
 import { HeroTerminalDemo } from '../hero-terminal-demo'
 
@@ -31,213 +30,241 @@ interface HeroProps {
   isAuthenticated?: boolean
 }
 
-// Stylized three-dots indicator representing "More"
-const MoreIcon = () => (
-  <svg
-    className='text-muted-foreground/60 group-hover:text-foreground size-6 shrink-0 transition-colors'
-    viewBox='0 0 24 24'
-    fill='none'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    <circle cx='6' cy='12' r='2' fill='currentColor' />
-    <circle cx='12' cy='12' r='2' fill='currentColor' />
-    <circle cx='18' cy='12' r='2' fill='currentColor' />
-  </svg>
-)
+interface HeroLiveModelSpec {
+  id: string
+  name: string
+  protocol: string
+  ttft: string
+  officialPrice: string
+  mihouoPrice: string
+  savingBadge: string
+  cacheHitRate: string
+  highlight: string
+}
+
+const HERO_LIVE_MODELS: HeroLiveModelSpec[] = [
+  {
+    id: 'claude-opus-5-5',
+    name: 'Claude Opus 5.5',
+    protocol: 'Anthropic /v1/messages',
+    ttft: '11 ms',
+    officialPrice: '$4.00 / M',
+    mihouoPrice: '$0.20 / M',
+    savingBadge: '缓存立省 95%',
+    cacheHitRate: '94.8%',
+    highlight: '1M 原生上下文 · 常驻自适应深度思考',
+  },
+  {
+    id: 'gpt-6-astra',
+    name: 'GPT-6 Astra / Sol',
+    protocol: 'OpenAI /v1/responses',
+    ttft: '13 ms',
+    officialPrice: '$2.00 / M',
+    mihouoPrice: '$0.10 / M',
+    savingBadge: '缓存立省 95%',
+    cacheHitRate: '93.5%',
+    highlight: '1.05M 上下文 · 异步工具调用与 Ultrafast',
+  },
+  {
+    id: 'gemini-4-argon',
+    name: 'Gemini 4 Argon',
+    protocol: 'Google /v1beta & OpenAI',
+    ttft: '14 ms',
+    officialPrice: '$4.00 / M',
+    mihouoPrice: '$0.20 / M',
+    savingBadge: '缓存立省 95%',
+    cacheHitRate: '92.4%',
+    highlight: '1M 统一多模态窗口 · 千万行代码库解耦',
+  },
+  {
+    id: 'deepseek-v4-pro',
+    name: 'DeepSeek V4 Pro',
+    protocol: 'Messages & Responses',
+    ttft: '15 ms',
+    officialPrice: '$1.32 / M',
+    mihouoPrice: '$0.022 / M',
+    savingBadge: '缓存立省 97%',
+    cacheHitRate: '96.2%',
+    highlight: '1.6T 稀疏 MoE · 384K 输出与闲时半价',
+  },
+]
 
 export function Hero(props: HeroProps) {
   const { t } = useTranslation()
-  const { status } = useStatus()
-  const docsUrl =
-    (status?.docs_link as string | undefined) || 'https://docs.newapi.pro'
-
-  const renderDocsButton = () => {
-    const isExternal = docsUrl.startsWith('http')
-    if (isExternal) {
-      return (
-        <Button
-          variant='outline'
-          className='group border-border/50 hover:border-border hover:bg-muted/50 inline-flex h-11 items-center gap-1.5 rounded-lg px-5 text-sm font-medium'
-          render={
-            <a href={docsUrl} target='_blank' rel='noopener noreferrer' />
-          }
-        >
-          <BookOpen className='text-muted-foreground/80 group-hover:text-foreground size-4 transition-colors duration-200' />
-          <span>{t('Docs')}</span>
-        </Button>
-      )
-    }
-    return (
-      <Button
-        variant='outline'
-        className='group border-border/50 hover:border-border hover:bg-muted/50 inline-flex h-11 items-center gap-1.5 rounded-lg px-5 text-sm font-medium'
-        render={<Link to={docsUrl} />}
-      >
-        <BookOpen className='text-muted-foreground/80 group-hover:text-foreground size-4 transition-colors duration-200' />
-        <span>{t('Docs')}</span>
-      </Button>
-    )
-  }
+  const [activeModelIdx, setActiveModelIdx] = useState(0)
+  const activeSpec = HERO_LIVE_MODELS[activeModelIdx]
 
   return (
-    <section className='relative z-10 overflow-hidden px-6 pt-24 pb-16 md:pt-32 md:pb-24 lg:pt-36 lg:pb-28'>
-      {/* Radial gradient background */}
-      <div
-        aria-hidden
-        className='pointer-events-none absolute inset-0 -z-10 opacity-25 dark:opacity-[0.12]'
-        style={{
-          background: [
-            'radial-gradient(ellipse 60% 50% at 20% 20%, oklch(0.72 0.18 250 / 80%) 0%, transparent 70%)',
-            'radial-gradient(ellipse 50% 40% at 80% 15%, oklch(0.65 0.15 200 / 60%) 0%, transparent 70%)',
-            'radial-gradient(ellipse 40% 35% at 40% 80%, oklch(0.70 0.12 280 / 40%) 0%, transparent 70%)',
-          ].join(', '),
-        }}
-      />
-      {/* Grid pattern */}
-      <div
-        aria-hidden
-        className='absolute inset-0 -z-10 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_30%,black_20%,transparent_100%)] bg-[size:4rem_4rem] opacity-[0.08]'
-      />
+    <section className='relative z-10 overflow-hidden pt-24 pb-10 md:pt-28 md:pb-12'>
+      <div className='mx-auto max-w-[1280px] px-6 md:px-12'>
+        <div className='grid grid-cols-1 items-stretch gap-10 lg:grid-cols-12 lg:gap-8'>
+          {/* Left Column: Poetic Porcelain Headline + Eye-Catching Live Telemetry & Cache Savings Showcase */}
+          <div className='flex flex-col justify-between text-left lg:col-span-6'>
+            <div>
+              {/* Architectural Eyebrow */}
+              <div
+                className='landing-animate-fade-up text-muted-foreground mb-4 inline-flex items-center gap-2.5 text-xs tracking-[0.14em] opacity-0'
+                style={{ animationDelay: '20ms' }}
+              >
+                <span className='bg-foreground/35 inline-block h-px w-5' />
+                <span>{t('AI Application Infrastructure Foundation')}</span>
+              </div>
 
-      <div className='mx-auto grid max-w-6xl grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-8'>
-        {/* Left Column: Title, description, action buttons and application support */}
-        <div className='flex flex-col items-start text-left lg:col-span-6'>
-          {/* Top Pill Badge */}
-          <div
-            className='landing-animate-fade-up mb-5 inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 px-3 py-1.5 text-[11px] font-medium text-blue-600 opacity-0 shadow-xs dark:border-blue-400/20 dark:bg-blue-400/5 dark:text-blue-400'
-            style={{ animationDelay: '0ms' }}
-          >
-            <span className='relative flex size-1.5'>
-              <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75' />
-              <span className='relative inline-flex size-1.5 rounded-full bg-blue-500 dark:bg-blue-400' />
-            </span>
-            <span>{t('AI Application Infrastructure Foundation')}</span>
-          </div>
+              {/* Signature 9+9 Character Poetic Serif Headline */}
+              <h1
+                className='landing-animate-fade-up font-serif text-[clamp(2.35rem,3.9vw,3.35rem)] leading-[1.16] font-normal tracking-[-0.015em] text-[#141413] opacity-0 dark:text-[#F4F1EA]'
+                style={{ animationDelay: '60ms' }}
+              >
+                {t('Unified API Gateway for')}
+                <br />
+                <span className='text-[#3F3F3C] dark:text-zinc-300'>
+                  {t('Vast Range of AI Models')}
+                </span>
+              </h1>
 
-          <h1
-            className='landing-animate-fade-up text-[clamp(2.25rem,4.5vw,3.25rem)] leading-[1.15] font-bold tracking-tight'
-            style={{ animationDelay: '60ms' }}
-          >
-            {t('Unified API Gateway for')}
-            <br />
-            <span className='bg-gradient-to-r from-blue-400 via-violet-400 to-purple-500 bg-clip-text text-transparent'>
-              {t('Vast Range of AI Models')}
-            </span>
-          </h1>
-          <p
-            className='landing-animate-fade-up text-muted-foreground/80 mt-5 max-w-xl text-base leading-relaxed opacity-0 md:text-[15px]'
-            style={{ animationDelay: '120ms' }}
-          >
-            {t(
-              'Access a vast selection of models via a standard, unified API protocol. Power AI applications, manage digital assets, and connect the Future.'
-            )}
-          </p>
-
-          <div
-            className='landing-animate-fade-up mt-8 flex flex-wrap items-center gap-3 opacity-0'
-            style={{ animationDelay: '180ms' }}
-          >
-            {props.isAuthenticated ? (
-              <>
-                <Button
-                  className='group h-11 rounded-lg px-5 text-sm font-medium'
-                  render={<Link to='/dashboard' />}
-                >
-                  {t('Go to Dashboard')}
-                  <ArrowRight className='ml-1.5 size-4 transition-transform duration-200 group-hover:translate-x-0.5' />
-                </Button>
-                {renderDocsButton()}
-              </>
-            ) : (
-              <>
-                <Button
-                  className='group h-11 rounded-lg px-5 text-sm font-medium'
-                  render={<Link to='/sign-up' />}
-                >
-                  {t('Get Started')}
-                  <ArrowRight className='ml-1.5 size-4 transition-transform duration-200 group-hover:translate-x-0.5' />
-                </Button>
-                <Button
-                  variant='outline'
-                  className='border-border/50 hover:border-border hover:bg-muted/50 h-11 rounded-lg px-5 text-sm font-medium'
-                  render={<Link to='/pricing' />}
-                >
-                  {t('View Pricing')}
-                </Button>
-                {renderDocsButton()}
-              </>
-            )}
-          </div>
-
-          {/* Supported Apps (参考图二样式，进行卡片化和信息扩充设计，增加视觉高度) */}
-          <div
-            className='landing-animate-fade-up mt-10 w-full max-w-xl opacity-0'
-            style={{ animationDelay: '240ms' }}
-          >
-            <div className='mb-4 flex flex-col gap-1'>
-              <span className='text-muted-foreground/50 text-[10px] font-bold tracking-[0.15em] uppercase'>
-                {t('Supported Applications')}
-              </span>
-              <p className='text-muted-foreground/60 text-xs leading-relaxed'>
+              {/* Concise 2-Line Subtitle */}
+              <p
+                className='landing-animate-fade-up mt-4 max-w-[500px] text-[14.5px] leading-[1.72] font-normal whitespace-pre-line text-[#3F3F3C] opacity-0 dark:text-zinc-300'
+                style={{ animationDelay: '110ms' }}
+              >
                 {t(
-                  'Supports one-click configuration and perfectly adapts to NewAPI multi-protocol configuration.'
+                  'Access a vast selection of models via a standard, unified API protocol. Power AI applications, manage digital assets, and connect the Future.'
                 )}
               </p>
             </div>
-            <div className='flex flex-wrap items-center gap-3'>
-              {/* Cherry Studio */}
-              <a
-                href='https://cherry-ai.com'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='group border-border/40 bg-muted/15 text-foreground/80 hover:border-border hover:bg-muted/30 hover:text-foreground flex items-center gap-3 rounded-full border px-5 py-2.5 text-sm font-medium shadow-[0_1px_2.5px_rgba(0,0,0,0.01)] backdrop-blur-xs transition-all duration-300 hover:scale-[1.02]'
-              >
-                <CherryStudio.Color size={24} className='shrink-0' />
-                <span>Cherry Studio</span>
-              </a>
 
-              {/* CC Switch */}
-              <a
-                href='https://ccswitch.io'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='group border-border/40 bg-muted/15 text-foreground/80 hover:border-border hover:bg-muted/30 hover:text-foreground flex items-center gap-3 rounded-full border px-5 py-2.5 text-sm font-medium shadow-[0_1px_2.5px_rgba(0,0,0,0.01)] backdrop-blur-xs transition-all duration-300 hover:scale-[1.02]'
-              >
-                <img
-                  src='https://ccswitch.io/favicon.png'
-                  alt='CC Switch'
-                  className='size-6 shrink-0 rounded-md object-contain'
-                  onError={(e) => {
-                    // Fallback to a styled text avatar if the remote favicon fails to load in sandbox or local environments
-                    e.currentTarget.style.display = 'none'
-                    const fallback = e.currentTarget.nextSibling as HTMLElement
-                    if (fallback) fallback.style.display = 'flex'
-                  }}
-                />
-                <span
-                  style={{ display: 'none' }}
-                  className='size-6 shrink-0 items-center justify-center rounded-md bg-blue-500/10 text-[10px] font-bold text-blue-600 dark:bg-blue-400/10 dark:text-blue-400'
-                >
-                  CC
-                </span>
-                <span>CC Switch</span>
-              </a>
+            {/* Eye-Catching Porcelain Live Telemetry & Cache-Saving Console Card */}
+            <div
+              className='landing-animate-fade-up mt-7 w-full overflow-hidden rounded-[20px] border border-white bg-white shadow-[0_22px_46px_-12px_rgba(20,20,18,0.08),0_4px_12px_rgba(20,20,18,0.025)] opacity-0 dark:border-white/15 dark:bg-zinc-900'
+              style={{ animationDelay: '160ms' }}
+            >
+              {/* Top Chamber: Model Switcher Tabs + Live Pulse */}
+              <div className='border-b border-black/[0.05] bg-[#FAF9F5] px-5 py-3 dark:border-white/10 dark:bg-zinc-800/50'>
+                <div className='flex flex-wrap items-center justify-between gap-2'>
+                  <div className='flex items-center gap-2'>
+                    <span className='relative flex size-2'>
+                      <span className='bg-foreground/40 absolute inline-flex h-full w-full animate-ping rounded-full opacity-75' />
+                      <span className='bg-foreground relative inline-flex size-2 rounded-full' />
+                    </span>
+                    <span className='font-mono text-[11px] font-medium text-[#52524E] dark:text-zinc-300'>
+                      实时专线路由与缓存精算
+                    </span>
+                  </div>
 
-              {/* "更多" */}
-              <div className='group border-border/40 bg-muted/15 text-foreground/55 hover:border-border hover:bg-muted/30 hover:text-foreground flex cursor-default items-center gap-2.5 rounded-full border px-5 py-2.5 text-sm font-medium shadow-[0_1px_2.5px_rgba(0,0,0,0.01)] backdrop-blur-xs transition-all duration-300 hover:scale-[1.02]'>
-                <MoreIcon />
-                <span>{t('More Apps')}</span>
+                  <div className='flex items-center gap-1'>
+                    {HERO_LIVE_MODELS.map((m, idx) => (
+                      <button
+                        key={m.id}
+                        type='button'
+                        onClick={() => setActiveModelIdx(idx)}
+                        className={cn(
+                          'rounded-full px-2.5 py-0.5 font-mono text-[11px] transition-all',
+                          idx === activeModelIdx
+                            ? 'bg-[#141413] font-medium text-white dark:bg-white dark:text-[#141413]'
+                            : 'text-[#71716C] hover:bg-black/[0.04] hover:text-[#141413] dark:text-zinc-400'
+                        )}
+                      >
+                        {m.name.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle Chamber: Live Cost-Saving Comparison & Latency Telemetry */}
+              <div className='px-6 py-4.5'>
+                <div className='flex items-baseline justify-between gap-4'>
+                  <div>
+                    <div className='flex items-center gap-2'>
+                      <span className='font-serif text-[18px] text-[#141413] dark:text-white'>
+                        {activeSpec.name}
+                      </span>
+                      <span className='rounded-full border border-black/10 bg-[#F6F5F0] px-2.5 py-0.5 font-mono text-[10.5px] font-medium text-[#141413] dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-200'>
+                        {activeSpec.savingBadge}
+                      </span>
+                    </div>
+                    <p className='mt-0.5 text-[12px] text-[#71716C] dark:text-zinc-400'>
+                      {activeSpec.highlight}
+                    </p>
+                  </div>
+
+                  <div className='text-right'>
+                    <div className='font-mono text-[11px] text-[#71716C] line-through'>
+                      官方 {activeSpec.officialPrice}
+                    </div>
+                    <div className='font-serif text-[20px] leading-tight text-[#141413] dark:text-white'>
+                      {activeSpec.mihouoPrice}{' '}
+                      <span className='font-sans text-[11px] font-normal text-[#71716C]'>
+                        缓存命中
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visual Cache Hit & TTFT Bar */}
+                <div className='mt-3.5'>
+                  <div className='mb-1.5 flex items-center justify-between font-mono text-[11px] text-[#52524E] dark:text-zinc-400'>
+                    <span>
+                      多轮代码库前缀缓存命中率{' '}
+                      <strong className='text-[#141413] dark:text-white'>
+                        {activeSpec.cacheHitRate}
+                      </strong>
+                    </span>
+                    <span>
+                      首字响应{' '}
+                      <strong className='text-[#141413] dark:text-white'>
+                        {activeSpec.ttft}
+                      </strong>
+                    </span>
+                  </div>
+                  <div className='h-1.5 w-full overflow-hidden rounded-full bg-[#EFECE6] dark:bg-zinc-800'>
+                    <div
+                      className='h-full rounded-full bg-gradient-to-r from-[#141413] via-[#52524E] to-[#9A7B56] transition-all duration-500 dark:from-white dark:to-amber-200'
+                      style={{ width: activeSpec.cacheHitRate }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Lower Chamber: Direct Action Buttons */}
+              <div className='flex flex-wrap items-center justify-between gap-2 border-t border-black/[0.05] bg-[#F6F5F0] px-6 py-3 dark:border-white/10 dark:bg-zinc-800/60'>
+                <div className='flex items-center gap-2 text-[12px] text-[#52524E] dark:text-zinc-300'>
+                  <Sparkles className='size-3.5 text-[#8C7051]' />
+                  <span>即开即用 · 一枚密钥通调全栈旗舰</span>
+                </div>
+
+                <div className='flex items-center gap-2'>
+                  <a
+                    href='#client-integration-hub'
+                    className='text-[#52524E] hover:text-[#141413] dark:text-zinc-400 dark:hover:text-white px-2.5 py-1 text-[11.5px] font-medium transition-colors'
+                  >
+                    接入指南
+                  </a>
+                  <Link
+                    to={props.isAuthenticated ? '/dashboard' : '/sign-up'}
+                    className='bg-[#141413] text-white hover:bg-[#272725] dark:bg-white dark:text-[#141413] inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[11.5px] font-medium transition-all'
+                  >
+                    <span>
+                      {props.isAuthenticated ? '进入控制台' : '获取密钥'}
+                    </span>
+                    <ArrowRight className='size-3' />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Hero Terminal API Demo */}
-        <div
-          className='landing-animate-fade-up flex w-full justify-center opacity-0 lg:col-span-6'
-          style={{ animationDelay: '320ms' }}
-        >
-          <HeroTerminalDemo className='mt-8 lg:mt-0' />
+          {/* Right Column: Real-Time 3D Optical Glass Pyramid Canvas & Aligned Telemetry */}
+          <div
+            className='landing-animate-fade-up flex w-full items-stretch justify-center opacity-0 lg:col-span-6 lg:justify-end'
+            style={{ animationDelay: '220ms' }}
+          >
+            <HeroTerminalDemo
+              className='w-full'
+              activeIndex={activeModelIdx}
+              onActiveIndexChange={setActiveModelIdx}
+            />
+          </div>
         </div>
       </div>
     </section>
