@@ -33,7 +33,6 @@ interface PrismRouteNode {
   labelKey: string
   protocol: string
   latency: string
-  metricKey: string
   topPercent: number
   targetY: number
 }
@@ -44,7 +43,6 @@ const PRISM_NODES: PrismRouteNode[] = [
     labelKey: 'Claude Opus 5.5',
     protocol: 'POST /v1/messages',
     latency: '11ms TTFT',
-    metricKey: '1M 上下文 · 自适应深度思考',
     topPercent: 18,
     targetY: 61,
   },
@@ -53,25 +51,22 @@ const PRISM_NODES: PrismRouteNode[] = [
     labelKey: 'GPT-6 Astra / Sol',
     protocol: 'POST /v1/responses',
     latency: '13ms TTFT',
-    metricKey: '1.05M 上下文 · 异步工具调用',
     topPercent: 38,
     targetY: 129,
   },
   {
-    id: 'gemini-4-argon',
-    labelKey: 'Gemini 4 Argon',
-    protocol: 'POST /v1beta',
+    id: 'glm-5.3',
+    labelKey: 'GLM-5.3',
+    protocol: 'POST /v1/chat/completions',
     latency: '14ms TTFT',
-    metricKey: '1M 多模态上下文 · 跨仓库分析',
     topPercent: 58,
     targetY: 197,
   },
   {
-    id: 'deepseek-v4-pro',
-    labelKey: 'DeepSeek V4 Pro',
-    protocol: 'CACHE HIT // -97%',
-    latency: '缓存立减 97%',
-    metricKey: '1M 上下文 · 384K 输出 · 闲时半价',
+    id: 'deepseek-flash',
+    labelKey: 'DeepSeek Flash',
+    protocol: 'POST /v1/chat/completions',
+    latency: '15ms TTFT',
     topPercent: 78,
     targetY: 265,
   },
@@ -471,7 +466,12 @@ function drawFluidOpticalPrism(
   // 11. Curved Iridescent Caustic Fan & S-Curve Cubic Bézier Outgoing Ribbons
   const targetX = 486
   ctx.save()
-  const fanGrad = ctx.createLinearGradient(exitPt.x, exitPt.y, targetX, exitPt.y)
+  const fanGrad = ctx.createLinearGradient(
+    exitPt.x,
+    exitPt.y,
+    targetX,
+    exitPt.y
+  )
   if (isDark) {
     fanGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)')
     fanGrad.addColorStop(0.5, 'rgba(186, 208, 240, 0.08)')
@@ -513,7 +513,8 @@ function drawFluidOpticalPrism(
     const cp1y =
       exitPt.y + (ty - exitPt.y) * 0.16 + Math.sin(timeSec * 1.4 + idx) * 3.5
     const cp2x = targetX - 68
-    const cp2y = ty - (ty - exitPt.y) * 0.08 + Math.cos(timeSec * 1.2 + idx) * 2.5
+    const cp2y =
+      ty - (ty - exitPt.y) * 0.08 + Math.cos(timeSec * 1.2 + idx) * 2.5
 
     // Soft outer ribbon glow
     let ribbonStroke: string
@@ -597,11 +598,7 @@ function drawFluidOpticalPrism(
   ctx.restore()
 }
 
-export function HeroTerminalDemo({
-  className,
-  activeIndex,
-  onActiveIndexChange,
-}: HeroTerminalDemoProps) {
+export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
   const { t } = useTranslation()
   const { resolvedTheme } = useTheme()
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -627,7 +624,7 @@ export function HeroTerminalDemo({
       drawFluidOpticalPrism(
         canvas,
         elapsed,
-        activeIndex,
+        props.activeIndex,
         smoothPointerRef.current,
         isDark
       )
@@ -636,15 +633,15 @@ export function HeroTerminalDemo({
 
     frameId = window.requestAnimationFrame(renderLoop)
     return () => window.cancelAnimationFrame(frameId)
-  }, [activeIndex, resolvedTheme])
+  }, [props.activeIndex, resolvedTheme])
 
-  const activeNode = PRISM_NODES[activeIndex]
+  const activeNode = PRISM_NODES[props.activeIndex]
 
   return (
     <div
       className={cn(
         'relative flex w-full max-w-[640px] flex-col justify-between select-none',
-        className
+        props.className
       )}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect()
@@ -667,12 +664,12 @@ export function HeroTerminalDemo({
 
         {/* 4 Porcelain Pill Nodes for the 2026 Frontier Models */}
         {PRISM_NODES.map((node, idx) => {
-          const isActive = idx === activeIndex
+          const isActive = idx === props.activeIndex
           return (
             <button
               key={node.id}
               type='button'
-              onClick={() => onActiveIndexChange(idx)}
+              onClick={() => props.onActiveIndexChange(idx)}
               style={{ top: `${node.topPercent}%` }}
               className={cn(
                 'absolute right-0 min-w-[156px] -translate-y-1/2 rounded-full border px-4.5 py-2 text-left text-[12.5px] font-medium whitespace-nowrap transition-all duration-300',
@@ -709,14 +706,9 @@ export function HeroTerminalDemo({
             {activeNode.protocol}
           </span>
         </div>
-        <div className='flex items-center gap-2'>
-          <span className='text-muted-foreground'>
-            {t(activeNode.metricKey)}
-          </span>
-          <span className='border-border bg-card text-foreground rounded-full border px-2.5 py-0.5 font-mono text-[10.5px] font-medium'>
-            {activeNode.latency}
-          </span>
-        </div>
+        <span className='border-border bg-card text-foreground rounded-full border px-2.5 py-0.5 font-mono text-[10.5px] font-medium'>
+          {activeNode.latency}
+        </span>
       </div>
     </div>
   )

@@ -35,9 +35,6 @@ export function Features(_props: FeaturesProps) {
       name: 'Claude Opus 5.5 / Fable 5.1',
       modelId: 'claude-opus-5-5 · claude-fable-5-1 · claude-sonnet-5-5',
       badge: 'Anthropic /v1/messages',
-      desc: t(
-        'Primary engine for Claude Code multi-file refactoring, autonomous tool loops, and extended thinking.'
-      ),
       context: '1,000K (1M)',
       cache: '最高立减 95%',
       ttft: '~11 ms',
@@ -47,69 +44,31 @@ export function Features(_props: FeaturesProps) {
       name: 'GPT-6 Astra / GPT-6.1 Sol',
       modelId: 'gpt-6-astra · gpt-6.1-sol · gpt-6-luna',
       badge: 'OpenAI /v1/responses',
-      desc: t(
-        'Precision terminal execution for OpenAI Codex CLI, algorithmic synthesis, and deep debugging.'
-      ),
       context: '1,050K (1.05M)',
       cache: '最高立减 95%',
       ttft: '~13 ms',
     },
     {
-      id: 'gemini-4-argon',
-      name: 'Gemini 4 Argon / 3.8 Flash',
-      modelId: 'gemini-4-argon · gemini-3.8-flash',
-      badge: 'Google /v1beta & OpenAI',
-      desc: t(
-        'Repository-scale whole-codebase comprehension and multimodal architecture review.'
-      ),
-      context: '1,000K (1M)',
+      id: 'glm-5.3',
+      name: 'GLM-5.3',
+      modelId: 'glm-5.3',
+      badge: 'OpenAI /v1/chat/completions',
+      context: '200K',
       cache: '最高立减 95%',
       ttft: '~14 ms',
     },
     {
       id: 'deepseek-v4-pro',
       name: 'DeepSeek V4 Pro / V4.1 Flash',
-      modelId: 'deepseek-v4-pro · deepseek-flash · qwen3.8-max',
+      modelId: 'deepseek-v4-pro · deepseek-flash',
       badge: '兼容 Anthropic & Responses',
-      desc: t(
-        'High-throughput reasoning chains, automated unit-test generation, and batch verification.'
-      ),
       context: '1,000K / 384K 输出',
       cache: '命中立减 97%',
       ttft: '~15 ms',
     },
   ]
 
-  const engineeringPillars = [
-    {
-      num: '01',
-      title: t('Lightning Fast'),
-      desc: t(
-        'Optimized network architecture ensures millisecond response times'
-      ),
-      tag: 'Messages ⇄ Responses',
-    },
-    {
-      num: '02',
-      title: t('Secure & Reliable'),
-      desc: t(
-        'Enterprise-grade security with comprehensive permission management'
-      ),
-      tag: '429 / 529 自动切换',
-    },
-    {
-      num: '03',
-      title: t('Global Coverage'),
-      desc: t('Multi-region deployment for stable global access'),
-      tag: '模型白名单 · 额度上限',
-    },
-    {
-      num: '04',
-      title: t('Developer Friendly'),
-      desc: t('Compatible API routes for common AI application workflows'),
-      tag: '缓存与思考 Token 分列',
-    },
-  ]
+  const modelRows = [curatedModels.slice(0, 2), curatedModels.slice(2, 4)]
 
   return (
     <section id='models-section' className='relative z-10 py-14 md:py-20'>
@@ -138,145 +97,69 @@ export function Features(_props: FeaturesProps) {
           </Link>
         </AnimateInView>
 
-        {/* 2x2 Curated 2026 Frontier Coding Model Matrix */}
+        {/* 2x2 Curated Frontier Coding Model Matrix */}
         <AnimateInView animation='fade-up'>
           <div className='border-border bg-card overflow-hidden rounded-[20px] border shadow-[0_22px_48px_-14px_rgba(20,20,18,0.06)]'>
-            <div className='divide-border grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0'>
-              {curatedModels.slice(0, 2).map((item) => (
-                <div
-                  key={item.id}
-                  className='flex h-full flex-col justify-between p-7 md:p-9'
-                >
-                  <div>
-                    <div className='mb-1.5 flex items-center justify-between gap-3'>
-                      <h3 className='text-foreground font-serif text-lg font-normal tracking-tight whitespace-nowrap md:text-[20px]'>
-                        {item.name}
-                      </h3>
-                      <span className='border-border bg-background text-muted-foreground shrink-0 rounded-full border px-3 py-0.5 font-mono text-[11px] whitespace-nowrap'>
-                        {item.badge}
-                      </span>
+            {modelRows.map((row, rowIdx) => (
+              <div
+                key={row[0].id}
+                className={
+                  rowIdx === 0
+                    ? 'divide-border grid grid-cols-1 divide-y md:grid-cols-2 md:divide-x md:divide-y-0'
+                    : 'border-border divide-border grid grid-cols-1 divide-y border-t md:grid-cols-2 md:divide-x md:divide-y-0'
+                }
+              >
+                {row.map((item) => (
+                  <div
+                    key={item.id}
+                    className='flex h-full flex-col justify-between p-6 md:p-7'
+                  >
+                    <div>
+                      <div className='mb-1.5 flex items-center justify-between gap-3'>
+                        <h3 className='text-foreground font-serif text-lg font-normal tracking-tight whitespace-nowrap md:text-[20px]'>
+                          {item.name}
+                        </h3>
+                        <span className='border-border bg-background text-muted-foreground shrink-0 rounded-full border px-3 py-0.5 font-mono text-[11px] whitespace-nowrap'>
+                          {item.badge}
+                        </span>
+                      </div>
+                      <div className='text-muted-foreground/75 font-mono text-[11.5px]'>
+                        {item.modelId}
+                      </div>
                     </div>
-                    <div className='text-muted-foreground/75 mb-3.5 font-mono text-[11.5px]'>
-                      {item.modelId}
-                    </div>
-                    <p className='text-muted-foreground text-[13.5px] leading-[1.65]'>
-                      {item.desc}
-                    </p>
-                  </div>
 
-                  <div className='border-border/80 mt-6 grid grid-cols-3 gap-4 border-t pt-4'>
-                    <div>
-                      <div className='text-muted-foreground text-[11px]'>
-                        上下文窗口
+                    <div className='border-border/80 mt-5 grid grid-cols-3 gap-4 border-t pt-4'>
+                      <div>
+                        <div className='text-muted-foreground text-[11px]'>
+                          上下文窗口
+                        </div>
+                        <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
+                          {item.context}
+                        </div>
                       </div>
-                      <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
-                        {item.context}
+                      <div>
+                        <div className='text-muted-foreground text-[11px]'>
+                          缓存读取折扣
+                        </div>
+                        <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
+                          {item.cache}
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <div className='text-muted-foreground text-[11px]'>
-                        缓存读取折扣
-                      </div>
-                      <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
-                        {item.cache}
-                      </div>
-                    </div>
-                    <div className='text-right'>
-                      <div className='text-muted-foreground text-[11px]'>
-                        首字响应
-                      </div>
-                      <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
-                        {item.ttft}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className='border-border divide-border grid grid-cols-1 divide-y border-t md:grid-cols-2 md:divide-x md:divide-y-0'>
-              {curatedModels.slice(2, 4).map((item) => (
-                <div
-                  key={item.id}
-                  className='flex h-full flex-col justify-between p-7 md:p-9'
-                >
-                  <div>
-                    <div className='mb-1.5 flex items-center justify-between gap-3'>
-                      <h3 className='text-foreground font-serif text-lg font-normal tracking-tight whitespace-nowrap md:text-[20px]'>
-                        {item.name}
-                      </h3>
-                      <span className='border-border bg-background text-muted-foreground shrink-0 rounded-full border px-3 py-0.5 font-mono text-[11px] whitespace-nowrap'>
-                        {item.badge}
-                      </span>
-                    </div>
-                    <div className='text-muted-foreground/75 mb-3.5 font-mono text-[11.5px]'>
-                      {item.modelId}
-                    </div>
-                    <p className='text-muted-foreground text-[13.5px] leading-[1.65]'>
-                      {item.desc}
-                    </p>
-                  </div>
-
-                  <div className='border-border/80 mt-6 grid grid-cols-3 gap-4 border-t pt-4'>
-                    <div>
-                      <div className='text-muted-foreground text-[11px]'>
-                        上下文窗口
-                      </div>
-                      <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
-                        {item.context}
-                      </div>
-                    </div>
-                    <div>
-                      <div className='text-muted-foreground text-[11px]'>
-                        缓存读取折扣
-                      </div>
-                      <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
-                        {item.cache}
-                      </div>
-                    </div>
-                    <div className='text-right'>
-                      <div className='text-muted-foreground text-[11px]'>
-                        首字响应
-                      </div>
-                      <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
-                        {item.ttft}
+                      <div className='text-right'>
+                        <div className='text-muted-foreground text-[11px]'>
+                          首字响应
+                        </div>
+                        <div className='text-foreground mt-0.5 font-mono text-xs font-semibold'>
+                          {item.ttft}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ))}
           </div>
         </AnimateInView>
-
-        {/* 4-Column Equal-Height Architectural Engineering Cards */}
-        <div className='mt-8 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4'>
-          {engineeringPillars.map((pillar, idx) => (
-            <AnimateInView
-              key={pillar.num}
-              delay={idx * 70}
-              animation='fade-up'
-              className='border-border bg-card/85 flex h-full flex-col justify-between rounded-[18px] border p-6 shadow-[0_12px_32px_-12px_rgba(20,20,18,0.045)]'
-            >
-              <div>
-                <div className='border-border/70 mb-4 flex items-center justify-between border-b pb-3'>
-                  <span className='text-muted-foreground font-serif text-base tabular-nums'>
-                    {pillar.num}
-                  </span>
-                  <span className='text-muted-foreground font-mono text-[10.5px]'>
-                    {pillar.tag}
-                  </span>
-                </div>
-                <h3 className='text-foreground mb-2 text-[15px] font-semibold tracking-tight'>
-                  {pillar.title}
-                </h3>
-                <p className='text-muted-foreground text-[13px] leading-[1.6]'>
-                  {pillar.desc}
-                </p>
-              </div>
-            </AnimateInView>
-          ))}
-        </div>
       </div>
     </section>
   )

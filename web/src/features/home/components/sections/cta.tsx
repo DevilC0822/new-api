@@ -39,7 +39,7 @@ export function CTA(props: CTAProps) {
     <section className='relative z-10 py-14 md:py-20'>
       <div className='mx-auto max-w-[1280px] px-6 md:px-12'>
         <AnimateInView
-          className='border-white bg-card rounded-[24px] border px-6 py-14 text-center shadow-[0_24px_54px_-14px_rgba(20,20,18,0.06)] md:px-16 md:py-20 dark:border-white/10'
+          className='bg-card rounded-[24px] border border-white px-6 py-14 text-center shadow-[0_24px_54px_-14px_rgba(20,20,18,0.06)] md:px-16 md:py-20 dark:border-white/10'
           animation='scale-in'
         >
           <p className='text-muted-foreground mb-3.5 text-xs tracking-[0.18em]'>

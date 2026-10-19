@@ -154,8 +154,8 @@ export function Footer(props: FooterProps) {
       {
         title: t('常用客户端'),
         links: [
-          { text: 'Claude Code 接入', href: '/dashboard' },
-          { text: 'OpenAI Codex CLI', href: '/dashboard' },
+          { text: 'Claude Code 接入', href: '/docs' },
+          { text: 'OpenAI Codex CLI', href: '/docs' },
           { text: t('API Keys'), href: '/keys' },
         ],
       },
@@ -164,11 +164,11 @@ export function Footer(props: FooterProps) {
         links: [
           {
             text: t('footer.columns.docs.links.quickStart'),
-            href: 'https://docs.newapi.pro/getting-started/',
+            href: '/docs',
           },
           {
             text: t('footer.columns.docs.links.apiDocs'),
-            href: 'https://docs.newapi.pro/api/',
+            href: '/docs',
           },
           { text: t('About'), href: '/about' },
         ],
@@ -212,6 +212,12 @@ export function Footer(props: FooterProps) {
             {props.copyright ?? t('footer.defaultCopyright')}
           </div>
           <div className='text-muted-foreground flex items-center gap-6 text-[12.5px]'>
+            <Link
+              to='/docs'
+              className='hover:text-foreground transition-colors'
+            >
+              {t('Docs')}
+            </Link>
             <a
               href='#client-integration-hub'
               className='hover:text-foreground transition-colors'

@@ -56,8 +56,7 @@ export function useTopNavLinks(): TopNavLink[] {
     )
   }, [status])
 
-  // Documentation link (may be external)
-  const docsLink: string | undefined = status?.docs_link as string | undefined
+  const docsNavLink: TopNavLink = { title: t('Docs'), href: '/docs' }
 
   const isAuthed = !!auth?.user
 
@@ -65,11 +64,14 @@ export function useTopNavLinks(): TopNavLink[] {
 
   const links: TopNavLink[] = []
 
-  // 首页采用设计稿的锚点导航：首页 / 模型与费率 / 接入指南
+  // 首页采用设计稿的锚点导航：首页 / 模型与费率 / 接入指南 / 文档
   if (pathname === '/') {
     links.push({ title: t('Home'), href: '/' })
     links.push({ title: t('模型与费率'), href: '#models-section' })
     links.push({ title: t('接入指南'), href: '#client-integration-hub' })
+    if (modules?.docs !== false) {
+      links.push(docsNavLink)
+    }
     return links
   }
 
@@ -97,13 +99,9 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('Rankings'), href: '/rankings', requiresAuth })
   }
 
-  // Docs (supports external links)
+  // Docs (in-page route like Model Square and Rankings)
   if (modules?.docs !== false) {
-    if (docsLink) {
-      links.push({ title: t('Docs'), href: docsLink, external: true })
-    } else {
-      links.push({ title: t('Docs'), href: '/docs' })
-    }
+    links.push(docsNavLink)
   }
 
   // About

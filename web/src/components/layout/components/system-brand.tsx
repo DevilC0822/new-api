@@ -47,10 +47,10 @@ export function SystemBrand(props: SystemBrandProps) {
   const { logo } = useSystemConfig()
 
   const variant = props.variant ?? 'sidebar'
-  const rawName = status?.system_name || props.defaultName || DEFAULT_SYSTEM_NAME
+  const rawName =
+    status?.system_name || props.defaultName || DEFAULT_SYSTEM_NAME
   const name = rawName === 'New API' ? DEFAULT_SYSTEM_NAME : rawName
-  const version =
-    status?.version || props.defaultVersion || 'api.mihouo.com'
+  const version = status?.version || props.defaultVersion || 'api.mihouo.com'
   const isDefaultLogo = !logo || logo === DEFAULT_LOGO
 
   if (variant === 'inline') {

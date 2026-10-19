@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 import { useTheme } from '@/context/theme-provider'
 
-function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
+function ProceduralPillarCanvas(props: { mode: 1 | 2 | 3 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { resolvedTheme } = useTheme()
 
@@ -50,70 +50,140 @@ function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
       ctx.scale(dpr, dpr)
       ctx.clearRect(0, 0, W, H)
 
-      if (mode === 1) {
-        // 01 智识选路: 26-Strand 3D Silk Aurora Wave with Pearl Halo Nodes
-        const strands = 26
-        for (let i = 0; i < strands; i++) {
-          const depth = i / (strands - 1)
+      const cy = H * 0.52
+
+      if (props.mode === 1) {
+        // 01 智识选路: 1-to-3 Multi-Route Topology (Active Optimal Route + 2 Standby Failover Lanes)
+        const sampleLaneY = (
+          nx: number,
+          laneOffset: number,
+          strandOffset: number
+        ) => {
+          let splitEnv = 0
+          if (nx > 0.12 && nx < 0.88) {
+            const u = (nx - 0.12) / 0.76
+            splitEnv = Math.pow(Math.sin(u * Math.PI), 1.35)
+          }
+          const pulse = Math.sin(nx * Math.PI * 3.0 - t * 1.8) * 1.4 * splitEnv
+          return (
+            cy +
+            laneOffset * splitEnv +
+            strandOffset * (0.35 + 0.65 * splitEnv) +
+            pulse
+          )
+        }
+
+        const standbyLanes = [0, 22]
+        standbyLanes.forEach((laneOffset) => {
+          for (let s = -1; s <= 1; s++) {
+            ctx.beginPath()
+            for (let x = 0; x <= W; x += 4) {
+              const nx = x / W
+              const y = sampleLaneY(nx, laneOffset, s * 2.2)
+              if (x === 0) ctx.moveTo(x, y)
+              else ctx.lineTo(x, y)
+            }
+            ctx.strokeStyle = isDark
+              ? `rgba(220, 226, 236, ${s === 0 ? 0.22 : 0.09})`
+              : `rgba(20, 20, 19, ${s === 0 ? 0.18 : 0.07})`
+            ctx.lineWidth = s === 0 ? 0.9 : 0.65
+            if (laneOffset > 0 && s === 0) {
+              ctx.setLineDash([3, 3])
+            }
+            ctx.stroke()
+            ctx.setLineDash([])
+          }
+        })
+
+        const activeStrands = 9
+        const leadIdx = Math.floor(activeStrands / 2)
+        for (let i = 0; i < activeStrands; i++) {
+          const frac = (i - leadIdx) / leadIdx
           ctx.beginPath()
           for (let x = 0; x <= W; x += 4) {
             const nx = x / W
-            const env = Math.sin(nx * Math.PI)
-            const y =
-              H * 0.52 +
-              Math.sin(nx * 5.2 - t * 1.35 + i * 0.16) * 20 * env +
-              Math.cos(nx * 2.8 + t * 0.85 - i * 0.22) * 9 * env +
-              (depth - 0.5) * 14 * (1 - env * 0.45)
+            const y = sampleLaneY(nx, -22, frac * 5.5)
             if (x === 0) ctx.moveTo(x, y)
             else ctx.lineTo(x, y)
           }
-          const alpha = 0.05 + (1 - Math.abs(depth - 0.5) * 1.6) * 0.34
-          if (i % 6 === 0) {
+          const alpha = 0.14 + (1 - Math.abs(frac)) * 0.42
+          if (i === leadIdx) {
             ctx.strokeStyle = isDark
-              ? `rgba(255, 255, 255, ${alpha * 1.5})`
-              : `rgba(255, 255, 255, ${alpha * 2.1})`
-            ctx.lineWidth = 1.25
+              ? 'rgba(255, 255, 255, 0.88)'
+              : 'rgba(20, 20, 19, 0.82)'
+            ctx.lineWidth = 1.35
           } else {
             ctx.strokeStyle = isDark
-              ? `rgba(220, 226, 236, ${alpha})`
-              : `rgba(20, 20, 19, ${alpha})`
-            ctx.lineWidth = 0.72
+              ? `rgba(220, 226, 236, ${alpha * 0.7})`
+              : `rgba(20, 20, 19, ${alpha * 0.65})`
+            ctx.lineWidth = 0.75
           }
           ctx.stroke()
         }
 
-        const nodePositions = [0.24, 0.52, 0.78]
-        nodePositions.forEach((nx, idx) => {
-          const x = nx * W
-          const i = 6 + idx * 6
-          const depth = i / (strands - 1)
-          const env = Math.sin(nx * Math.PI)
-          const y =
-            H * 0.52 +
-            Math.sin(nx * 5.2 - t * 1.35 + i * 0.16) * 20 * env +
-            Math.cos(nx * 2.8 + t * 0.85 - i * 0.22) * 9 * env +
-            (depth - 0.5) * 14 * (1 - env * 0.45)
+        const routeNodes = [
+          { nx: 0.14, lane: -22, active: true },
+          { nx: 0.5, lane: -22, active: true },
+          { nx: 0.5, lane: 0, active: false },
+          { nx: 0.5, lane: 22, active: false },
+          { nx: 0.86, lane: -22, active: true },
+        ]
+        routeNodes.forEach((node) => {
+          const x = node.nx * W
+          const y = sampleLaneY(node.nx, node.lane, 0)
+          if (node.active) {
+            const halo = ctx.createRadialGradient(x, y, 0, x, y, 8)
+            halo.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
+            halo.addColorStop(1, 'rgba(255, 255, 255, 0)')
+            ctx.fillStyle = halo
+            ctx.beginPath()
+            ctx.arc(x, y, 8, 0, Math.PI * 2)
+            ctx.fill()
 
-          const halo = ctx.createRadialGradient(x, y, 0, x, y, 8)
-          halo.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
-          halo.addColorStop(1, 'rgba(255, 255, 255, 0)')
-          ctx.fillStyle = halo
-          ctx.beginPath()
-          ctx.arc(x, y, 8, 0, Math.PI * 2)
-          ctx.fill()
-
-          ctx.fillStyle = isDark ? '#ffffff' : '#141413'
-          ctx.beginPath()
-          ctx.arc(x, y, 2.0, 0, Math.PI * 2)
-          ctx.fill()
+            ctx.fillStyle = isDark ? '#ffffff' : '#141413'
+            ctx.beginPath()
+            ctx.arc(x, y, 2.1, 0, Math.PI * 2)
+            ctx.fill()
+          } else {
+            ctx.fillStyle = isDark
+              ? 'rgba(255, 255, 255, 0.32)'
+              : 'rgba(20, 20, 19, 0.28)'
+            ctx.beginPath()
+            ctx.arc(x, y, 1.6, 0, Math.PI * 2)
+            ctx.fill()
+          }
         })
-      } else if (mode === 2) {
-        // 02 双栈归一: 3D Dual-Helix Interweaving Silk Ribbon + Central Porcelain Convergence Lens
-        const strandsPerStream = 12
+      } else if (props.mode === 2) {
+        // 02 双栈归一: 2-to-1 Protocol Convergence (Two Separate Left Streams -> Central Gateway Lens -> Single Unified Right Stream)
+        const strandsPerStream = 9
         const cx = W * 0.5
-        const cy = H * 0.52
 
-        // Subtle ambient glow at the central convergence nexus
+        const sampleDualToSingleY = (
+          nx: number,
+          stream: number,
+          frac: number
+        ) => {
+          const sign = stream === 0 ? -1 : 1
+          if (nx <= 0.5) {
+            const u = nx / 0.5
+            const sep = 0.5 * (1 + Math.cos(u * Math.PI))
+            const branchOffset = sign * 21 * sep
+            const branchSpread = frac * (7.5 * sep + 1.2 * (1 - sep))
+            const ripple =
+              Math.sin(u * Math.PI) *
+              Math.sin(nx * Math.PI * 4.0 - t * 1.8 + stream * 1.2) *
+              1.8
+            return cy + branchOffset + branchSpread + ripple
+          }
+
+          const v = (nx - 0.5) / 0.5
+          const fadeIn = Math.sin(v * Math.PI)
+          const microBraiding =
+            sign * Math.sin(v * Math.PI * 2.5 - t * 2.2) * 2.4 * fadeIn
+          const unifiedSpread = frac * 3.2 * (0.45 + 0.55 * (1 - v * 0.4))
+          return cy + microBraiding + unifiedSpread
+        }
+
         const nexusAura = ctx.createRadialGradient(cx, cy, 2, cx, cy, 42)
         nexusAura.addColorStop(
           0,
@@ -129,50 +199,32 @@ function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
         ctx.arc(cx, cy, 42, 0, Math.PI * 2)
         ctx.fill()
 
-        // Draw Stream A (Graphite Ink — Anthropic Messages) & Stream B (Warm Bronze/Pearl — OpenAI Responses) braiding into one
+        const leadIndex = Math.floor(strandsPerStream / 2)
         for (let stream = 0; stream < 2; stream++) {
-          const sign = stream === 0 ? 1 : -1
           for (let i = 0; i < strandsPerStream; i++) {
-            const frac = i / (strandsPerStream - 1) - 0.5
+            const frac = i === leadIndex ? 0 : (i - leadIndex) / leadIndex
             ctx.beginPath()
             for (let x = 0; x <= W; x += 4) {
               const nx = x / W
-              const env = Math.sin(nx * Math.PI)
-              // Smoothly converges at nx = 0.5 (the optical lens) and braids with phase offset
-              const pinch = Math.abs(nx - 0.5) * 2
-              const helix =
-                sign *
-                Math.sin(nx * Math.PI * 2.2 - t * 1.25 + frac * 0.55) *
-                21 *
-                env
-              const spread =
-                frac * (14 * (0.28 + 0.72 * Math.pow(pinch, 0.85)))
-              const harmonic =
-                Math.cos(nx * Math.PI * 4.0 + t * 0.9 + stream * 1.4) *
-                2.5 *
-                env
-              const y = cy + helix + spread + harmonic
+              const y = sampleDualToSingleY(nx, stream, frac * 0.5)
               if (x === 0) ctx.moveTo(x, y)
               else ctx.lineTo(x, y)
             }
 
-            const baseAlpha = 0.08 + (1 - Math.abs(frac) * 1.5) * 0.34
-            if (i === Math.floor(strandsPerStream / 2)) {
+            const baseAlpha = 0.1 + (1 - Math.abs(frac) * 0.75) * 0.32
+            if (i === leadIndex) {
               let leadStroke: string
               if (stream === 0) {
                 leadStroke = isDark
-                  ? 'rgba(255,255,255,0.78)'
-                  : 'rgba(20,20,19,0.72)'
+                  ? 'rgba(255,255,255,0.82)'
+                  : 'rgba(20,20,19,0.78)'
               } else {
                 leadStroke = isDark
-                  ? 'rgba(230,195,150,0.78)'
-                  : 'rgba(154,118,78,0.72)'
+                  ? 'rgba(230,195,150,0.82)'
+                  : 'rgba(154,118,78,0.78)'
               }
               ctx.strokeStyle = leadStroke
-              ctx.lineWidth = 1.25
-            } else if (i % 4 === 0) {
-              ctx.strokeStyle = `rgba(255, 255, 255, ${baseAlpha * 1.9})`
-              ctx.lineWidth = 1.05
+              ctx.lineWidth = 1.3
             } else {
               let strandStroke: string
               if (stream === 0) {
@@ -191,7 +243,6 @@ function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
           }
         }
 
-        // Central Vertical Optical Crystal Ring at x = 0.5
         ctx.save()
         ctx.strokeStyle = isDark
           ? 'rgba(255,255,255,0.45)'
@@ -210,28 +261,18 @@ function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
         ctx.stroke()
         ctx.restore()
 
-        // Flowing photon pearls along the two braided streams + central nexus pearl
         const pearls = [
-          { nx: 0.22, stream: 0 },
-          { nx: 0.22, stream: 1 },
-          { nx: 0.5, stream: 0 },
-          { nx: 0.78, stream: 0 },
-          { nx: 0.78, stream: 1 },
+          { nx: 0.18, stream: 0, isCenter: false },
+          { nx: 0.18, stream: 1, isCenter: false },
+          { nx: 0.5, stream: 0, isCenter: true },
+          { nx: 0.72, stream: 0, isCenter: false },
+          { nx: 0.86, stream: 1, isCenter: false },
         ]
-        pearls.forEach((p, idx) => {
+        pearls.forEach((p) => {
           const x = p.nx * W
-          const sign = p.stream === 0 ? 1 : -1
-          const env = Math.sin(p.nx * Math.PI)
-          const y =
-            idx === 2
-              ? cy
-              : cy +
-                sign * Math.sin(p.nx * Math.PI * 2.2 - t * 1.25) * 21 * env +
-                Math.cos(p.nx * Math.PI * 4.0 + t * 0.9 + p.stream * 1.4) *
-                  2.5 *
-                  env
+          const y = p.isCenter ? cy : sampleDualToSingleY(p.nx, p.stream, 0)
 
-          const r = idx === 2 ? 9 : 6
+          const r = p.isCenter ? 9 : 6
           const glow = ctx.createRadialGradient(x, y, 0, x, y, r)
           glow.addColorStop(0, 'rgba(255,255,255,0.98)')
           glow.addColorStop(1, 'rgba(255,255,255,0)')
@@ -241,60 +282,114 @@ function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
           ctx.fill()
 
           let pearlFill = '#8C6B48'
-          if (p.stream !== 1 || idx === 2) {
+          if (p.stream !== 1 || p.isCenter) {
             pearlFill = isDark ? '#ffffff' : '#141413'
           }
           ctx.fillStyle = pearlFill
           ctx.beginPath()
-          ctx.arc(x, y, idx === 2 ? 2.5 : 1.85, 0, Math.PI * 2)
+          ctx.arc(x, y, p.isCenter ? 2.6 : 1.9, 0, Math.PI * 2)
           ctx.fill()
         })
       } else {
-        // 03 澄明计量: 22-Strand Sculptural Harmonic Wave Field
-        const lines = 22
-        for (let i = 0; i < lines; i++) {
-          const ratio = i / (lines - 1)
-          const spread = (ratio - 0.5) * 44
+        // 03 澄明计量: 3-Layer Stratified Token Ledger (Input / Thinking / 95% Cache Hit) + Precision Calibration Ticks
+        const tickCount = 19
+        for (let i = 1; i < tickCount; i++) {
+          const tx = (i / tickCount) * W
+          const isMajor = i % 3 === 0
+          const halfH = isMajor ? 28 : 16
+          ctx.strokeStyle = isDark
+            ? `rgba(255, 255, 255, ${isMajor ? 0.12 : 0.05})`
+            : `rgba(20, 20, 19, ${isMajor ? 0.1 : 0.045})`
+          ctx.lineWidth = 0.75
           ctx.beginPath()
-          for (let x = 0; x <= W; x += 4) {
-            const nx = x / W
-            const pinch = 1 - Math.sin(nx * Math.PI) * 0.58
-            const wave =
-              Math.sin(nx * Math.PI * 2.4 - t * 1.15 + ratio * 1.9) * 12 +
-              Math.cos(nx * Math.PI * 1.2 + t * 0.75) * 4
-            const y =
-              H * 0.52 + spread * pinch + wave * (1 - Math.abs(ratio - 0.5))
-            if (x === 0) ctx.moveTo(x, y)
-            else ctx.lineTo(x, y)
-          }
-          const alpha = 0.05 + (1 - Math.abs(ratio - 0.5) * 1.7) * 0.36
-          if (i === Math.floor(lines / 2)) {
-            const g = ctx.createLinearGradient(0, 0, W, 0)
-            g.addColorStop(
-              0,
-              isDark ? 'rgba(255,255,255,0.1)' : 'rgba(20,20,19,0.15)'
-            )
-            g.addColorStop(
-              0.5,
-              isDark ? 'rgba(255,235,205,0.75)' : 'rgba(180,140,96,0.55)'
-            )
-            g.addColorStop(
-              1,
-              isDark ? 'rgba(255,255,255,0.1)' : 'rgba(20,20,19,0.15)'
-            )
-            ctx.strokeStyle = g
-            ctx.lineWidth = 1.3
-          } else if (i % 5 === 0) {
-            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 1.9})`
-            ctx.lineWidth = 1.05
-          } else {
-            ctx.strokeStyle = isDark
-              ? `rgba(220, 226, 236, ${alpha})`
-              : `rgba(20, 20, 19, ${alpha})`
-            ctx.lineWidth = 0.72
-          }
+          ctx.moveTo(tx, cy - halfH)
+          ctx.lineTo(tx, cy + halfH)
           ctx.stroke()
         }
+
+        const ledgerBands = [
+          { baseOffset: -17, amp: 2.2, phase: 0, isAccent: false },
+          { baseOffset: 0, amp: 2.8, phase: 1.4, isAccent: true },
+          { baseOffset: 17, amp: 2.2, phase: 2.8, isAccent: false },
+        ]
+
+        const sampleBandY = (
+          nx: number,
+          bandIdx: number,
+          subOffset: number
+        ) => {
+          const band = ledgerBands[bandIdx]
+          const env = Math.sin(nx * Math.PI)
+          const wave =
+            Math.sin(nx * Math.PI * 3.0 - t * 1.4 + band.phase) * band.amp * env
+          return cy + band.baseOffset + wave + subOffset * env
+        }
+
+        ledgerBands.forEach((band, bandIdx) => {
+          for (let s = -2; s <= 2; s++) {
+            const isLead = s === 0
+            ctx.beginPath()
+            for (let x = 0; x <= W; x += 4) {
+              const nx = x / W
+              const y = sampleBandY(nx, bandIdx, s * 1.35)
+              if (x === 0) ctx.moveTo(x, y)
+              else ctx.lineTo(x, y)
+            }
+            if (isLead) {
+              if (band.isAccent) {
+                ctx.strokeStyle = isDark
+                  ? 'rgba(230, 195, 150, 0.82)'
+                  : 'rgba(154, 118, 78, 0.78)'
+              } else {
+                ctx.strokeStyle = isDark
+                  ? 'rgba(255, 255, 255, 0.72)'
+                  : 'rgba(20, 20, 19, 0.68)'
+              }
+              ctx.lineWidth = 1.2
+            } else {
+              const alpha = 0.18 - Math.abs(s) * 0.05
+              if (band.isAccent) {
+                ctx.strokeStyle = isDark
+                  ? `rgba(215, 185, 148, ${alpha})`
+                  : `rgba(148, 112, 72, ${alpha})`
+              } else {
+                ctx.strokeStyle = isDark
+                  ? `rgba(220, 226, 236, ${alpha})`
+                  : `rgba(20, 20, 19, ${alpha})`
+              }
+              ctx.lineWidth = 0.68
+            }
+            ctx.stroke()
+          }
+        })
+
+        const checkpoints = [
+          { nx: 0.25, bandIdx: 0 },
+          { nx: 0.5, bandIdx: 1 },
+          { nx: 0.75, bandIdx: 2 },
+        ]
+        checkpoints.forEach((cp) => {
+          const x = cp.nx * W
+          const y = sampleBandY(cp.nx, cp.bandIdx, 0)
+          const glow = ctx.createRadialGradient(x, y, 0, x, y, 6)
+          glow.addColorStop(0, 'rgba(255, 255, 255, 0.95)')
+          glow.addColorStop(1, 'rgba(255, 255, 255, 0)')
+          ctx.fillStyle = glow
+          ctx.beginPath()
+          ctx.arc(x, y, 6, 0, Math.PI * 2)
+          ctx.fill()
+
+          let cpColor = '#141413'
+          if (cp.bandIdx === 1) {
+            cpColor = '#8C6B48'
+          } else if (isDark) {
+            cpColor = '#ffffff'
+          }
+          ctx.fillStyle = cpColor
+          ctx.beginPath()
+          ctx.arc(x, y, 2.0, 0, Math.PI * 2)
+          ctx.fill()
+        })
       }
 
       ctx.restore()
@@ -303,7 +398,7 @@ function ProceduralPillarCanvas({ mode }: { mode: 1 | 2 | 3 }) {
 
     frameId = window.requestAnimationFrame(render)
     return () => window.cancelAnimationFrame(frameId)
-  }, [mode, resolvedTheme])
+  }, [props.mode, resolvedTheme])
 
   return (
     <canvas
@@ -322,27 +417,24 @@ export function Stats() {
       num: '01',
       mode: 1 as const,
       title: t('Intelligent Routing'),
-      headline: t('Sub-millisecond adaptive model routing.'),
       desc: t(
-        'Dynamic path optimization routing your code tasks to optimal models in real-time with microsecond latency.'
+        'Dynamic path selection based on real-time TTFT and upstream health keeps every coding instruction responsive.'
       ),
     },
     {
       num: '02',
       mode: 2 as const,
       title: t('Agentic Synthesis'),
-      headline: t('Autonomous agent orchestration.'),
       desc: t(
-        'High-context, multi-step code synthesis and execution environments with robust sandboxing.'
+        'One api.mihouo.com endpoint unifies Anthropic, OpenAI, and Google protocols for multi-step repository synthesis.'
       ),
     },
     {
       num: '03',
       mode: 3 as const,
       title: t('Absolute Integrity'),
-      headline: t('Guaranteed security and privacy.'),
       desc: t(
-        'Strict enterprise-grade security protocols, zero-data retention pathways, and absolute reliability.'
+        'Strict zero-retention passthrough with micro-token accounting across input, reasoning, and prompt cache hits.'
       ),
     },
   ]
@@ -351,22 +443,18 @@ export function Stats() {
     {
       value: '< 1.8 ms',
       label: t('Optical Stream Overhead'),
-      detail: t('Zero-buffer SSE passthrough for uninterrupted coding sessions'),
     },
     {
       value: '99.98%',
       label: t('Multi-Region Failover SLA'),
-      detail: t('Silent sub-second rerouting on upstream rate limits'),
     },
     {
       value: '-95%',
       label: t('Prompt Cache Precision'),
-      detail: t('Native cache token accounting for iterative agent loops'),
     },
     {
       value: '0 留存',
       label: t('Ledger Granularity'),
-      detail: t('Auditable per-request input, output, and thinking token logs'),
     },
   ]
 
@@ -381,7 +469,7 @@ export function Stats() {
                 key={pillar.num}
                 delay={idx * 80}
                 animation='fade-up'
-                className='flex h-full flex-col'
+                className='flex h-full flex-col justify-between'
               >
                 <div>
                   <div className='flex items-baseline gap-2.5'>
@@ -399,39 +487,29 @@ export function Stats() {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className='text-foreground mb-1 text-[14px] font-semibold tracking-tight'>
-                    {pillar.headline}
-                  </h3>
-                  <p className='text-muted-foreground text-[13px] leading-[1.6]'>
-                    {pillar.desc}
-                  </p>
-                </div>
+                <p className='text-muted-foreground text-[13px] leading-[1.6]'>
+                  {pillar.desc}
+                </p>
               </AnimateInView>
             ))}
           </div>
         </div>
 
         {/* Strictly Aligned 4-Column Porcelain Telemetry Bar */}
-        <div className='border-border mt-12 grid grid-cols-2 border-y md:grid-cols-4'>
+        <div className='border-border mt-10 grid grid-cols-2 border-y md:grid-cols-4'>
           {telemetryItems.map((item, idx) => (
             <div
               key={item.label}
-              className={`flex flex-col justify-between py-7 ${
+              className={`flex flex-col justify-between py-5 ${
                 idx !== 0 ? 'md:border-border md:border-l md:pl-8' : ''
               } ${idx !== telemetryItems.length - 1 ? 'md:pr-6' : ''}`}
             >
-              <div>
-                <div className='text-foreground font-serif text-2xl font-normal tracking-tight tabular-nums md:text-[28px]'>
-                  {item.value}
-                </div>
-                <div className='text-foreground mt-2 text-[13.5px] font-semibold'>
-                  {item.label}
-                </div>
+              <div className='text-foreground font-serif text-2xl font-normal tracking-tight tabular-nums md:text-[28px]'>
+                {item.value}
               </div>
-              <p className='text-muted-foreground mt-1 text-[12px] leading-relaxed'>
-                {item.detail}
-              </p>
+              <div className='text-muted-foreground mt-1.5 text-[13px] font-medium'>
+                {item.label}
+              </div>
             </div>
           ))}
         </div>

@@ -16,37 +16,46 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
+
+import { DEFAULT_GATEWAY_ORIGIN } from '@/lib/constants'
 
 import { HowItWorks } from '../components/sections/how-it-works'
 
-describe('HowItWorks status hint strip', () => {
-  test('renders each gateway status hint with its code, title and description', () => {
+describe('HowItWorks client integration workbench', () => {
+  test('selects Claude Code by default and switches active client and Base URL when another tab is clicked', () => {
     render(<HowItWorks />)
 
-    const hints = [
-      {
-        code: '200 OK',
-        title: '连接正常',
-        description: '已直连上游模型',
-      },
-      {
-        code: '401 Auth',
-        title: '鉴权失败',
-        description: '请检查密钥或 Base URL 格式',
-      },
-      {
-        code: '429 / 529',
-        title: '并发超限',
-        description: '上游繁忙，自动切换热备通道',
-      },
-    ]
+    const claudeTab = screen.getByRole('tab', { name: /Claude Code/i })
+    const codexTab = screen.getByRole('tab', { name: /Codex CLI/i })
 
-    for (const hint of hints) {
-      expect(screen.getByText(hint.code)).toBeInTheDocument()
-      expect(screen.getByText(hint.title)).toBeInTheDocument()
-      expect(screen.getByText(hint.description)).toBeInTheDocument()
-    }
+    expect(claudeTab).toHaveAttribute('aria-selected', 'true')
+    expect(codexTab).toHaveAttribute('aria-selected', 'false')
+    expect(screen.getByText(DEFAULT_GATEWAY_ORIGIN)).toBeInTheDocument()
+
+    fireEvent.click(codexTab)
+
+    expect(codexTab).toHaveAttribute('aria-selected', 'true')
+    expect(claudeTab).toHaveAttribute('aria-selected', 'false')
+    expect(screen.getByText(`${DEFAULT_GATEWAY_ORIGIN}/v1`)).toBeInTheDocument()
+    expect(screen.getByText(/codex --model gpt-6-astra/)).toBeInTheDocument()
+  })
+
+  test('toggles between environment variable snippet and configuration file snippet', () => {
+    render(<HowItWorks />)
+
+    expect(
+      screen.getByText(/claude --model claude-opus-5-5/)
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '方式 B · 配置文件' }))
+
+    expect(
+      screen.getByText('配置文件（~/.claude/settings.json）')
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/"ANTHROPIC_DEFAULT_HAIKU_MODEL"/)
+    ).toBeInTheDocument()
   })
 })
