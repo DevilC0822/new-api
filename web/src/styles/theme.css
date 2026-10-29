@@ -164,6 +164,9 @@ For commercial licensing, please contact support@quantumnous.com
 }
 
 .dark {
+  /* Native controls follow the theme; Dark Reader also reads this to detect
+     the built-in dark theme. */
+  color-scheme: dark;
   --background: oklch(0.145 0.004 270);
   --foreground: oklch(0.955 0.006 90);
   --card: oklch(0.182 0.005 270);

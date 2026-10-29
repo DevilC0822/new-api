@@ -54,7 +54,7 @@ func ValidateAccountEmail(email string) (string, error) {
 	return email, nil
 }
 
-func StartEmailBinding(identity AuthIdentity, authorization *model.AuthFlowAuthorization, email string) (*EmailBindingData, error) {
+func StartEmailBinding(identity AuthIdentity, authorization *model.AuthFlowAuthorization, email string, lang string) (*EmailBindingData, error) {
 	email, err := ValidateAccountEmail(email)
 	if err != nil {
 		return nil, err
@@ -81,19 +81,19 @@ func StartEmailBinding(identity AuthIdentity, authorization *model.AuthFlowAutho
 	if err != nil {
 		return nil, err
 	}
-	if err := sendEmailBindingCodes(user.GetSetting().Language, state, codes); err != nil {
+	if err := sendEmailBindingCodes(lang, state, codes); err != nil {
 		// A partially delivered pair must not leave a usable change request.
 		_, _ = model.ConsumeAuthFlow(token, model.AuthFlowMatch{Purpose: model.AuthFlowPurposeEmailBinding, UserId: identity.UserID, SessionId: identity.SessionID})
 		return nil, ErrEmailBindingDelivery
 	}
 	data := emailBindingData(token, flow, &state)
 	if state.CurrentEmail != "" && !requireOld {
-		data.NotificationWarning = NotifyAccountSecurityChange(state.CurrentEmail, "A change of your email address was requested") != nil
+		data.NotificationWarning = NotifyAccountSecurityChange(lang, state.CurrentEmail, i18n.MsgSecurityEventEmailChangeRequested) != nil
 	}
 	return data, nil
 }
 
-func ResendAccountEmailBinding(identity AuthIdentity, token string) (*EmailBindingData, error) {
+func ResendAccountEmailBinding(identity AuthIdentity, token string, lang string) (*EmailBindingData, error) {
 	_, state, err := model.GetEmailBinding(identity, token)
 	if err != nil {
 		return nil, err
@@ -118,10 +118,6 @@ func ResendAccountEmailBinding(identity AuthIdentity, token string) (*EmailBindi
 	flow, state, err := model.ResendEmailBinding(identity, token, codes.NewHash, codes.OldHash)
 	if err != nil {
 		return nil, err
-	}
-	lang := ""
-	if user, err := model.GetUserById(identity.UserID, false); err == nil {
-		lang = user.GetSetting().Language
 	}
 	if err := sendEmailBindingCodes(lang, *state, codes); err != nil {
 		_, _ = model.ConsumeAuthFlow(token, model.AuthFlowMatch{Purpose: model.AuthFlowPurposeEmailBinding, UserId: identity.UserID, SessionId: identity.SessionID})
@@ -184,7 +180,7 @@ func generateEmailBindingCodes(requireOld bool) (emailBindingCodes, error) {
 
 func sendEmailBindingCodes(lang string, state model.EmailBindingState, codes emailBindingCodes) error {
 	params := map[string]any{"SystemName": common.SystemName}
-	minutes := map[string]any{"Minutes": common.VerificationValidMinutes}
+	minutes := map[string]any{"Minutes": int(model.EmailBindingTTL / time.Minute)}
 	subject := i18n.Translate(lang, i18n.MsgEmailBindingSubject, params)
 	layout := common.EmailLayout{
 		Preheader: subject,
@@ -192,18 +188,16 @@ func sendEmailBindingCodes(lang string, state model.EmailBindingState, codes ema
 		LogoURL:   common.EmailLogoURL(system_setting.ServerAddress),
 		SiteURL:   system_setting.ServerAddress,
 	}
-	layout.Content = common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingGreetingNew, params)) +
-		common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingCodeLabel)) +
+	layout.Content = common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingNewIntro)) +
 		common.EmailCodeBlock(codes.New) +
-		common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailBindingValidityNew, minutes))
+		common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailBindingNewValidity, minutes))
 	if err := common.SendEmail(subject, state.Email, common.RenderEmail(layout)); err != nil {
 		return err
 	}
 	if codes.Old != "" {
-		layout.Content = common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingGreetingOld, params)) +
-			common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingCodeLabel)) +
+		layout.Content = common.EmailParagraph(i18n.Translate(lang, i18n.MsgEmailBindingOldIntro)) +
 			common.EmailCodeBlock(codes.Old) +
-			common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailBindingValidityOld, minutes))
+			common.EmailMutedParagraph(i18n.Translate(lang, i18n.MsgEmailBindingOldValidity, minutes))
 		return common.SendEmail(subject, state.CurrentEmail, common.RenderEmail(layout))
 	}
 	return nil
