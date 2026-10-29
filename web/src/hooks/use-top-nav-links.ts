@@ -16,7 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useRouterState } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -60,28 +59,15 @@ export function useTopNavLinks(): TopNavLink[] {
 
   const isAuthed = !!auth?.user
 
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
-
   const links: TopNavLink[] = []
-
-  // 首页采用设计稿的锚点导航：首页 / 模型与费率 / 接入指南 / 文档
-  if (pathname === '/') {
-    links.push({ title: t('Home'), href: '/' })
-    links.push({ title: t('模型与费率'), href: '#models-section' })
-    links.push({ title: t('接入指南'), href: '#client-integration-hub' })
-    if (modules?.docs !== false) {
-      links.push(docsNavLink)
-    }
-    return links
-  }
 
   // Home
   if (modules?.home !== false) {
     links.push({ title: t('Home'), href: '/' })
   }
 
-  // Console -> /dashboard (new console path)
-  if (modules?.console !== false) {
+  // Console -> /dashboard (only shown when authenticated)
+  if (isAuthed && modules?.console !== false) {
     links.push({ title: t('Console'), href: '/dashboard' })
   }
 

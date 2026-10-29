@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="mihouo_flame_main" x1="16" y1="56" x2="48" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E40AF"/>
+      <stop offset="50%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="mihouo_flame_wing" x1="12" y1="50" x2="34" y2="16" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+  <path d="M35.5 6C35.5 6 53 21.8 53 38.2C53 50.2 43.6 58 32 58C20.4 58 11 50.2 11 38.2C11 28.5 17.2 20.5 23.8 15.4C22.8 21.6 25.8 26 30.2 27.6C27.4 19.4 30.5 11.5 35.5 6Z" fill="url(#mihouo_flame_main)"/>
+  <path d="M23.8 15.4C17.2 20.5 11 28.5 11 38.2C11 47.2 17.2 54.5 26 57.2C20.6 52.6 18.8 44.8 21.8 36.8C24 31.4 27.6 28.8 30.2 27.6C25.8 26 22.8 21.6 23.8 15.4Z" fill="url(#mihouo_flame_wing)" opacity="0.9"/>
+  <path d="M32 27C33.7 34.4 35.8 36.5 43.2 38.2C35.8 39.9 33.7 42 32 49.4C30.3 42 28.2 39.9 20.8 38.2C28.2 36.5 30.3 34.4 32 27Z" fill="#FFFFFF"/>
+</svg>

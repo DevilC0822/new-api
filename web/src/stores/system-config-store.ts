@@ -80,16 +80,23 @@ export const useSystemConfigStore = create<SystemConfigState>()(
       loading: true,
       loadedLogoUrl: DEFAULT_LOGO,
       setConfig: (newConfig) =>
-        set((state) => ({
-          config: {
-            ...state.config,
-            ...newConfig,
-            currency: {
-              ...state.config.currency,
-              ...(newConfig.currency ?? {}),
+        set((state) => {
+          const rawName = newConfig.systemName ?? state.config.systemName
+          const systemName = rawName
+            ? rawName.replaceAll('弥火', '觅火')
+            : DEFAULT_SYSTEM_NAME
+          return {
+            config: {
+              ...state.config,
+              ...newConfig,
+              systemName,
+              currency: {
+                ...state.config.currency,
+                ...(newConfig.currency ?? {}),
+              },
             },
-          },
-        })),
+          }
+        }),
       setLoadedLogoUrl: (url) => set({ loadedLogoUrl: url }),
       setLoading: (loading) => set({ loading }),
     }),

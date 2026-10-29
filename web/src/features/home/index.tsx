@@ -113,15 +113,16 @@ export function Home() {
   }
 
   return (
-    <PublicLayout
-      showMainContainer={false}
-      showThemeSwitch={false}
-      headerProps={{ showLanguageSwitcher: false, showNotifications: false }}
-    >
-      <div className='min-h-svh bg-[#f3f2ed] dark:bg-zinc-950'>
+    <PublicLayout showMainContainer={false}>
+      <div className='relative min-h-svh bg-[#FBFBFD] text-[#0F172A] dark:bg-zinc-950 dark:text-zinc-100'>
+        {/* Subtle Ambient Light Backdrop */}
+        <div
+          aria-hidden='true'
+          className='pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_60%_50%_at_72%_12%,rgba(37,99,235,0.06)_0%,transparent_70%),radial-gradient(ellipse_50%_40%_at_20%_25%,rgba(8,145,178,0.05)_0%,transparent_65%),radial-gradient(ellipse_70%_50%_at_50%_85%,rgba(99,102,241,0.035)_0%,transparent_70%)]'
+        />
         <Hero isAuthenticated={isAuthenticated} />
-        <Stats />
         <Features />
+        <Stats />
         <HowItWorks />
         <CTA isAuthenticated={isAuthenticated} />
         <Footer slim />

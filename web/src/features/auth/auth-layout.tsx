@@ -31,7 +31,8 @@ type AuthLayoutProps = {
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useTranslation()
   const { systemName, logo, loading } = useSystemConfig()
-  const displayName = systemName || DEFAULT_SYSTEM_NAME
+  const rawName = systemName || DEFAULT_SYSTEM_NAME
+  const displayName = rawName.replaceAll('弥火', '觅火')
   const isDefaultLogo = !logo || logo === DEFAULT_LOGO
 
   let logoBadge: React.ReactNode = (
@@ -60,10 +61,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <Skeleton className='h-6 w-24' />
         ) : (
           <div className='flex flex-col leading-none'>
-            <span className='font-serif text-base font-normal tracking-[0.18em]'>
+            <span className='text-[15px] font-bold tracking-[0.06em] text-[#0F172A] dark:text-white'>
               {displayName}
             </span>
-            <span className='text-muted-foreground/70 mt-1 font-mono text-[9.5px] tracking-[0.06em]'>
+            <span className='mt-0.5 font-mono text-[10px] text-[#64748B] dark:text-zinc-400'>
               api.mihouo.com
             </span>
           </div>

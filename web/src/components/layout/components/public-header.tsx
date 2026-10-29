@@ -98,7 +98,11 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   const user = auth.user
   const isAuthenticated = !!user
-  const rawSiteName = customSiteName || systemName || DEFAULT_SYSTEM_NAME
+  const rawSiteName = (
+    customSiteName ||
+    systemName ||
+    DEFAULT_SYSTEM_NAME
+  ).replaceAll('弥火', '觅火')
   const isDefaultBrand =
     rawSiteName === 'New API' ||
     rawSiteName === DEFAULT_SYSTEM_NAME ||
@@ -107,7 +111,7 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   let logoContent: ReactNode =
     !systemLogo || systemLogo === DEFAULT_LOGO ? (
-      <Logo className='size-10 text-[#18181B] dark:text-zinc-100' />
+      <Logo className='size-7' />
     ) : (
       <HeaderLogo
         src={systemLogo}
@@ -128,7 +132,7 @@ export function PublicHeader(props: PublicHeaderProps) {
   let authContent = showAuthCta ? (
     <Link
       to={isAuthenticated ? '/dashboard' : '/sign-in'}
-      className='inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-black/15 bg-white/80 px-4.5 text-[13px] font-medium whitespace-nowrap text-[#141413] shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-200 hover:border-black/35 hover:bg-white dark:border-white/20 dark:bg-zinc-900/80 dark:text-zinc-100'
+      className='inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[#0F172A] bg-[#0F172A] px-4 text-[12.5px] font-semibold whitespace-nowrap text-white shadow-[0_6px_16px_-4px_rgba(15,23,42,0.22)] transition-all duration-200 hover:-translate-y-px hover:bg-[#1E293B] dark:border-white dark:bg-white dark:text-[#0F172A]'
     >
       <span>{isAuthenticated ? t('Go to Dashboard') : t('Sign in')}</span>
       <ArrowRight className='size-3.5' />
@@ -221,7 +225,7 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   let brandContent: ReactNode = (
     <span
-      className='max-w-48 truncate font-serif text-lg font-normal tracking-wide'
+      className='max-w-48 truncate text-[14px] font-bold tracking-wide text-[#0F172A] dark:text-zinc-100'
       title={rawSiteName}
     >
       {rawSiteName}
@@ -231,18 +235,13 @@ export function PublicHeader(props: PublicHeaderProps) {
     brandContent = <Skeleton className='h-5 w-28' />
   } else if (isDefaultBrand) {
     brandContent = (
-      <div className='flex flex-col leading-none'>
-        <div className='flex items-center gap-2.5'>
-          <span className='font-serif text-[20px] font-normal tracking-[0.26em] text-[#141413] dark:text-[#F4F1EA]'>
-            MIHOUO
-          </span>
-          <span className='h-3.5 w-px bg-black/15 dark:bg-white/20' />
-          <span className='font-serif text-[13px] tracking-[0.18em] text-[#3F3F3C] dark:text-zinc-300'>
-            弥火
-          </span>
-        </div>
-        <span className='mt-1 text-[11.5px] tracking-[0.02em] text-[#6E6E68] dark:text-zinc-400'>
-          api.mihouo.com
+      <div className='flex items-center gap-2 leading-none'>
+        <span className='text-[13.5px] font-bold tracking-[0.14em] text-[#0F172A] dark:text-zinc-100'>
+          MIHOUO
+        </span>
+        <span className='h-3 w-px bg-[#0F172A]/18 dark:bg-white/20' />
+        <span className='text-[13.5px] font-semibold tracking-[0.04em] text-[#334155] dark:text-zinc-300'>
+          觅火
         </span>
       </div>
     )
@@ -253,40 +252,34 @@ export function PublicHeader(props: PublicHeaderProps) {
       <header className='pointer-events-none fixed inset-x-0 top-0 z-50'>
         <div
           className={cn(
-            'pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-            scrolled
-              ? 'max-w-[64rem] px-4 pt-3'
-              : 'max-w-[1280px] px-6 pt-4 md:px-12'
+            'pointer-events-auto mx-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+            scrolled ? 'max-w-[68rem] px-4 pt-3' : 'max-w-[1180px] px-4 pt-4'
           )}
         >
           <nav
             className={cn(
-              'flex items-center justify-between gap-4 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-              scrolled
-                ? 'bg-background/85 ring-border/70 h-14 rounded-full pr-3 pl-5 shadow-[0_8px_30px_-8px_rgba(20,20,22,0.08)] ring-[0.5px] backdrop-blur-2xl dark:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.45)]'
-                : 'h-16 px-0'
+              'flex h-14 items-center justify-between gap-4 rounded-full border border-[#0F172A]/[0.08] bg-white/85 pr-3 pl-5 shadow-[0_12px_32px_-12px_rgba(15,23,42,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] dark:border-white/10 dark:bg-zinc-900/85 dark:shadow-[0_12px_32px_-12px_rgba(0,0,0,0.45)]'
             )}
           >
-            {/* Brand Lockup matching Reference Image: 3D Polyhedron Crystal + M I H O U O + api.mihouo.com */}
+            {/* Brand Lockup: Pure Flame Glyph + MIHOUO · 觅火 */}
             <div
               className={cn(
-                '@container/system-brand flex min-w-0 flex-1 items-center gap-3',
-                !scrolled && 'lg:min-w-52'
+                '@container/system-brand flex min-w-0 items-center gap-2.5'
               )}
             >
               <Link
                 to={homeUrl}
                 className={cn(
-                  'group flex min-w-0 items-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-                  scrolled ? 'gap-0' : 'gap-3.5'
+                  'group flex min-w-0 items-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                  scrolled ? 'gap-0' : 'gap-2.5'
                 )}
               >
-                <div className='flex size-10 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105'>
+                <div className='flex size-8 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105'>
                   {logoContent}
                 </div>
                 <div
                   className={cn(
-                    'flex min-w-0 items-center overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
+                    'flex min-w-0 items-center overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
                     scrolled ? 'max-w-0 opacity-0' : 'max-w-60 opacity-100'
                   )}
                 >
@@ -296,7 +289,7 @@ export function PublicHeader(props: PublicHeaderProps) {
             </div>
 
             {/* Desktop nav */}
-            <div className='hidden min-w-0 items-center gap-2 lg:flex'>
+            <div className='hidden min-w-0 items-center gap-1 lg:flex'>
               {links.map((link) => {
                 const isActive = pathname === link.href
                 const isAnchor = link.href.startsWith('#')
@@ -312,7 +305,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                       tabIndex={link.disabled ? -1 : undefined}
                       onClick={(event) => handleNavLinkClick(event, link)}
                       className={cn(
-                        'min-w-0 truncate rounded-full px-3.5 py-1.5 text-[13.5px] font-medium text-[#18181B]/80 transition-colors duration-200 hover:text-[#18181B] dark:text-zinc-300 dark:hover:text-white',
+                        'min-w-0 truncate rounded-full px-3.5 py-1.5 text-[13.5px] font-medium text-[#64748B] transition-colors duration-200 hover:bg-[#0F172A]/[0.04] hover:text-[#0F172A] dark:text-zinc-300 dark:hover:bg-white/5 dark:hover:text-white',
                         link.disabled && 'pointer-events-none opacity-50'
                       )}
                     >
@@ -328,10 +321,10 @@ export function PublicHeader(props: PublicHeaderProps) {
                     disabled={link.disabled}
                     onClick={(event) => handleNavLinkClick(event, link)}
                     className={cn(
-                      'min-w-0 truncate rounded-full px-3.5 py-1.5 text-[13.5px] font-medium transition-colors duration-200',
+                      'min-w-0 truncate rounded-full px-3.5 py-1.5 text-[13.5px] font-medium transition-colors duration-200 hover:bg-[#0F172A]/[0.04]',
                       isActive
-                        ? 'text-[#141413] dark:text-white'
-                        : 'text-[#18181B]/75 hover:text-[#141413] dark:text-zinc-300 dark:hover:text-white',
+                        ? 'font-semibold text-[#0F172A] dark:text-white'
+                        : 'text-[#64748B] hover:text-[#0F172A] dark:text-zinc-300 dark:hover:text-white',
                       link.disabled && 'pointer-events-none opacity-50'
                     )}
                   >
@@ -339,13 +332,10 @@ export function PublicHeader(props: PublicHeaderProps) {
                   </Link>
                 )
               })}
+            </div>
 
-              {(showLanguageSwitcher ||
-                showThemeSwitch ||
-                showNotifications) && (
-                <div className='mx-1.5 h-4 w-px bg-black/10 dark:bg-white/10' />
-              )}
-
+            {/* Desktop right actions */}
+            <div className='hidden shrink-0 items-center gap-2 lg:flex'>
               {showLanguageSwitcher && <LanguageSwitcher />}
               {showThemeSwitch && <ThemeSwitch />}
               {showNotifications && isAuthenticated && (
@@ -361,9 +351,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                 />
               )}
 
-              {showAuthButtons && (
-                <div className='ml-2 shrink-0'>{authContent}</div>
-              )}
+              {showAuthButtons && <div className='shrink-0'>{authContent}</div>}
             </div>
 
             {/* Mobile: compact actions + hamburger */}

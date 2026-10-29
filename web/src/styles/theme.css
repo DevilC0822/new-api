@@ -86,7 +86,7 @@ For commercial licensing, please contact support@quantumnous.com
 }
 
 :root {
-  /* Exact Nordic Porcelain & Morning Mist Canvas (#F3F2ED) */
+  /* Optical Alabaster & Cool Slate Canvas (#FBFBFD) */
   --radius: 0.875rem;
   --app-header-height: 3.25rem;
   --app-rev: '2k6e8r7p';
@@ -94,33 +94,33 @@ For commercial licensing, please contact support@quantumnous.com
     -apple-system, BlinkMacSystemFont, 'Inter', 'Public Sans Variable',
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-body: var(--font-ui-sans);
-  --background: #f3f2ed;
-  --foreground: #141413;
+  --background: #fbfbfd;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #141413;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #141413;
-  --primary: #18181b;
-  --primary-foreground: #f3f2ed;
-  --secondary: #eae9e3;
-  --secondary-foreground: #18181b;
-  --muted: #ecebe5;
-  --muted-foreground: #6e6e68;
-  --accent: #eae9e3;
-  --accent-foreground: #141413;
+  --popover-foreground: #0f172a;
+  --primary: #0f172a;
+  --primary-foreground: #fbfbfd;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f4f5f8;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
   --destructive: oklch(0.56 0.19 26);
   --destructive-foreground: oklch(0.99 0 0);
   --success: oklch(0.52 0.11 162);
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.66 0.13 75);
-  --warning-foreground: #141413;
+  --warning-foreground: #0f172a;
   --info: oklch(0.48 0.08 245);
   --info-foreground: oklch(0.99 0 0);
-  --neutral: #71717a;
-  --neutral-foreground: #141413;
-  --border: rgba(20, 20, 19, 0.1);
-  --input: rgba(20, 20, 19, 0.12);
-  --ring: #18181b;
+  --neutral: #64748b;
+  --neutral-foreground: #0f172a;
+  --border: rgba(15, 23, 42, 0.08);
+  --input: rgba(15, 23, 42, 0.12);
+  --ring: #0f172a;
   --chart-1: oklch(0.24 0.008 270);
   --chart-2: oklch(0.48 0.03 240);
   --chart-3: oklch(0.56 0.06 165);
@@ -129,16 +129,16 @@ For commercial licensing, please contact support@quantumnous.com
   --overview-accent-1: oklch(0.32 0.01 270);
   --overview-accent-2: oklch(0.55 0.02 90);
   --overview-accent-3: oklch(0.45 0.03 240);
-  --sidebar: #f6f5f0;
-  --sidebar-foreground: #141413;
-  --sidebar-primary: #18181b;
-  --sidebar-primary-foreground: #f3f2ed;
-  --sidebar-accent: #ecebe5;
-  --sidebar-accent-foreground: #141413;
-  --sidebar-border: rgba(20, 20, 19, 0.08);
-  --sidebar-ring: #18181b;
-  --skeleton-base: #e8e7e0;
-  --skeleton-highlight: #f6f5f0;
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #fbfbfd;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: rgba(15, 23, 42, 0.08);
+  --sidebar-ring: #0f172a;
+  --skeleton-base: #e2e8f0;
+  --skeleton-highlight: #f8fafc;
   --table-row: var(--background);
   --table-header: color-mix(in oklch, var(--foreground) 2%, var(--background));
   --table-header-hover: color-mix(

@@ -73,7 +73,7 @@ describe('PublicHeader scrolled layout', () => {
     await renderHeader()
 
     const lockup = screen
-      .getByText('api.mihouo.com')
+      .getByText('觅火')
       .closest('div[class*="overflow-hidden"]')
     expect(lockup).not.toBeNull()
     expect(lockup).not.toHaveClass('max-w-0')
@@ -93,7 +93,29 @@ describe('PublicHeader scrolled layout', () => {
     }
   })
 
-  it('omits the dashboard CTA when the nav already links to the console', async () => {
+  it('hides the console nav link for unauthenticated guests and keeps nav links consistent across routes', async () => {
+    useSystemConfigStore.setState({ loading: false })
+
+    const homeView = await renderHeader('/')
+    expect(
+      screen.queryByRole('link', { name: 'Console' })
+    ).not.toBeInTheDocument()
+    const homeNavTitles = screen
+      .getAllByRole('link')
+      .map((el) => el.textContent?.trim())
+    homeView.unmount()
+
+    await renderHeader('/pricing')
+    expect(
+      screen.queryByRole('link', { name: 'Console' })
+    ).not.toBeInTheDocument()
+    const pricingNavTitles = screen
+      .getAllByRole('link')
+      .map((el) => el.textContent?.trim())
+    expect(pricingNavTitles).toEqual(homeNavTitles)
+  })
+
+  it('shows the console nav link when authenticated and omits the redundant dashboard CTA', async () => {
     useSystemConfigStore.setState({ loading: false })
     useAuthStore.getState().auth.setUser({ id: 1, username: 'tester', role: 1 })
 
@@ -104,16 +126,5 @@ describe('PublicHeader scrolled layout', () => {
     ).not.toBeInTheDocument()
     // The nav itself still provides the console entry
     expect(screen.getAllByRole('link', { name: 'Console' })).not.toHaveLength(0)
-  })
-
-  it('keeps the dashboard CTA on the landing nav where no console link exists', async () => {
-    useSystemConfigStore.setState({ loading: false })
-    useAuthStore.getState().auth.setUser({ id: 1, username: 'tester', role: 1 })
-
-    await renderHeader('/')
-
-    expect(
-      screen.getAllByRole('link', { name: 'Go to Dashboard' })
-    ).not.toHaveLength(0)
   })
 })

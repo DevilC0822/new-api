@@ -16,10 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Check, Copy, ListTree, Terminal } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { cn } from '@/lib/utils'
@@ -36,10 +36,11 @@ interface DocsTocProps {
 }
 
 export function DocsToc(props: DocsTocProps) {
+  const { t } = useTranslation()
   const { copyToClipboard } = useCopyToClipboard()
   const [copiedProbe, setCopiedProbe] = useState(false)
 
-  const probeCommand = `curl ${props.gatewayOrigin}/v1/models \\\n  -H "Authorization: Bearer $MIHOUO_API_KEY"`
+  const probeCommand = `curl ${props.gatewayOrigin}/v1/models \\\n  -H "Authorization: Bearer $API_KEY"`
 
   const handleCopyProbe = async () => {
     const ok = await copyToClipboard(probeCommand)
@@ -50,14 +51,17 @@ export function DocsToc(props: DocsTocProps) {
   }
 
   return (
-    <aside aria-label='本页章节锚点' className='hidden xl:col-span-2 xl:block'>
+    <aside
+      aria-label={t('Table of Contents')}
+      className='hidden xl:col-span-2 xl:block'
+    >
       <div className='sticky top-24 space-y-5'>
         {/* On This Page TOC */}
         <div className='border-border bg-card/85 rounded-[18px] border p-4 shadow-[0_12px_28px_-12px_rgba(20,20,18,0.04)]'>
           <div className='border-border/70 mb-3 flex items-center gap-2 border-b pb-2.5'>
             <ListTree className='text-muted-foreground size-3.5' />
             <span className='text-foreground text-[11.5px] font-semibold tracking-[0.06em]'>
-              本页目录
+              {t('On This Page')}
             </span>
           </div>
 
@@ -78,12 +82,12 @@ export function DocsToc(props: DocsTocProps) {
                         : 'text-muted-foreground hover:text-foreground',
                       !isVisible && 'opacity-40'
                     )}
-                    title={section.title}
+                    title={t(section.title)}
                   >
                     <span className='mr-1.5 font-mono text-[10px] opacity-70'>
                       {section.number}
                     </span>
-                    <span>{section.title}</span>
+                    <span>{t(section.title)}</span>
                   </button>
                 </li>
               )
@@ -96,7 +100,7 @@ export function DocsToc(props: DocsTocProps) {
           <div className='flex items-center justify-between gap-2'>
             <div className='flex items-center gap-1.5 font-mono text-[11px] text-zinc-300'>
               <Terminal className='size-3.5 text-amber-200/80' />
-              <span>连通性自检</span>
+              <span>{t('Connectivity Probe')}</span>
             </div>
             <button
               type='button'
@@ -106,12 +110,12 @@ export function DocsToc(props: DocsTocProps) {
               {copiedProbe ? (
                 <>
                   <Check className='size-2.5' />
-                  <span>已复制</span>
+                  <span>{t('Copied')}</span>
                 </>
               ) : (
                 <>
                   <Copy className='size-2.5' />
-                  <span>复制</span>
+                  <span>{t('Copy')}</span>
                 </>
               )}
             </button>
@@ -120,24 +124,30 @@ export function DocsToc(props: DocsTocProps) {
             <code>{probeCommand}</code>
           </pre>
           <p className='mt-2 text-[10.5px] leading-[1.5] text-zinc-400'>
-            返回模型列表 JSON 即代表密钥与网络直连正常。
+            {t(
+              'Returning a models JSON list indicates your key and direct connection are working.'
+            )}
           </p>
         </div>
 
-        {/* Porcelain Quick Action CTA */}
+        {/* Quick Action CTA */}
         <div className='bg-card rounded-[18px] border border-white p-4 shadow-[0_12px_28px_-12px_rgba(20,20,18,0.05)] dark:border-white/10'>
           <div className='font-serif text-[14px] text-[#141413] dark:text-white'>
-            即刻开启极速编码
+            {t('Start Coding Now')}
           </div>
           <p className='text-muted-foreground mt-1 text-[11.5px] leading-[1.55]'>
-            创建子令牌并绑定模型权限，一键接入 Claude Code 与 Codex。
+            {t(
+              'Create sub-tokens, configure model permissions, and connect to Claude Code and Codex in minutes.'
+            )}
           </p>
           <Link
             to={props.isAuthenticated ? '/keys' : '/sign-up'}
             className='mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#141413] px-3.5 py-2 text-[12px] font-medium text-white transition-colors hover:bg-[#272725] dark:bg-white dark:text-[#141413]'
           >
             <span>
-              {props.isAuthenticated ? '前往令牌管理' : '免费注册账号'}
+              {props.isAuthenticated
+                ? t('Go to Key Management')
+                : t('Sign Up for Free')}
             </span>
             <ArrowRight className='size-3' />
           </Link>

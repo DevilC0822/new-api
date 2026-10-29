@@ -16,70 +16,44 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
-export type DocsCategoryId =
-  | 'getting-started'
-  | 'client-guides'
-  | 'api-reference'
-  | 'billing-and-ops'
-
 export type DocsSectionId =
-  | 'overview'
-  | 'quickstart'
   | 'base-url-matrix'
   | 'client-workbench'
   | 'protocol-workbench'
-  | 'prompt-caching'
   | 'status-codes'
-  | 'faq'
 
 export interface DocsSectionMeta {
   id: DocsSectionId
-  categoryId: DocsCategoryId
   number: string
   title: string
   subtitle: string
-  keywords: string[]
 }
 
-export interface DocsCategoryMeta {
-  id: DocsCategoryId
-  label: string
-  badge: string
-  sections: DocsSectionId[]
-}
-
-export interface BaseUrlMatrixItem {
-  id: string
-  protocolName: string
-  method: 'POST' | 'GET'
-  endpointPath: string
-  recommendedBaseUrlSuffix: string
+export interface BaseUrlEndpointCard {
+  id: 'anthropic' | 'openai'
+  title: string
+  protocolBadge: string
+  baseUrlSuffix: string
   authHeader: string
-  supportedClients: string
-  note: string
+  clients: string
+  ruleNote: string
 }
 
 export interface DocsClientGuideItem {
   id: string
   name: string
-  subtitle: string
   tag: string
   protocol: string
-  recommendedModel: string
+  exampleModel: string
   baseUrlSuffix: string
   baseUrlNote: string
-  authHeader: string
   envTitle: string
   buildEnvCode: (gatewayOrigin: string) => string
   configTitle: string
   buildConfigCode: (gatewayOrigin: string) => string
-  verifyTitle: string
-  buildVerifyCode: (gatewayOrigin: string) => string
-  highlights: string[]
 }
 
-export type DocsCodeLang = 'curl' | 'python' | 'typescript' | 'javascript'
+export type DocsCodeLang = 'curl' | 'python' | 'typescript'
 
 export interface ProtocolParamItem {
   name: string
@@ -90,42 +64,26 @@ export interface ProtocolParamItem {
 }
 
 export interface DocsProtocolSpec {
-  id: 'messages' | 'responses' | 'chat' | 'gemini' | 'models'
+  id: 'messages' | 'responses' | 'chat'
   label: string
   badge: string
-  method: 'POST' | 'GET'
+  method: 'POST'
   endpointPath: string
-  summary: string
   authHeader: string
-  recommendedModels: string[]
   buildSampleCode: (lang: DocsCodeLang, gatewayOrigin: string) => string
   sampleResponse: string
   parameters: ProtocolParamItem[]
 }
 
-export interface DocsCacheTierItem {
-  id: string
-  protocol: string
-  modelFamily: string
-  writeMultiplier: string
-  readDiscount: string
-  ttl: string
-  description: string
-}
-
 export interface DocsStatusCodeItem {
   code: string
-  httpStatus: string
   title: string
-  severity: 'outline' | 'warning' | 'destructive'
-  badgeClassName?: string
-  gatewayBehavior: string
-  resolution: string
+  severity: 'warning' | 'destructive'
+  description: string
 }
 
 export interface DocsFaqItem {
   id: string
   question: string
   answer: string
-  category: string
 }

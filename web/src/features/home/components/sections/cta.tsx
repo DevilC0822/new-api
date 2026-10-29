@@ -20,58 +20,73 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { Logo } from '@/assets/logo'
 import { AnimateInView } from '@/components/animate-in-view'
 import { Button } from '@/components/ui/button'
+import { useSystemConfig } from '@/hooks/use-system-config'
+import { DEFAULT_SYSTEM_NAME } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
-interface CTAProps {
+export interface CTAProps {
   className?: string
   isAuthenticated?: boolean
 }
 
 export function CTA(props: CTAProps) {
   const { t } = useTranslation()
-
-  if (props.isAuthenticated) {
-    return null
-  }
+  const { systemName } = useSystemConfig()
+  const displayName = systemName || DEFAULT_SYSTEM_NAME
 
   return (
-    <section className='relative z-10 py-14 md:py-20'>
-      <div className='mx-auto max-w-[1280px] px-6 md:px-12'>
+    <section className={cn('relative z-10 pt-5 pb-16', props.className)}>
+      <div className='mx-auto max-w-[1220px] px-6'>
         <AnimateInView
-          className='bg-card rounded-[24px] border border-white px-6 py-14 text-center shadow-[0_24px_54px_-14px_rgba(20,20,18,0.06)] md:px-16 md:py-20 dark:border-white/10'
           animation='scale-in'
+          className='relative overflow-hidden rounded-[30px] border border-[#0F172A]/[0.08] bg-[radial-gradient(ellipse_65%_70%_at_50%_0%,rgba(37,99,235,0.08),transparent_70%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-8 py-14 text-center shadow-[0_24px_60px_-24px_rgba(15,23,42,0.06),inset_0_1px_0_#FFFFFF] dark:border-white/10 dark:bg-zinc-900 dark:bg-none'
         >
-          <p className='text-muted-foreground mb-3.5 text-xs tracking-[0.18em]'>
-            MIHOUO · API.MIHOUO.COM
-          </p>
-          <h2 className='font-serif text-2xl leading-[1.2] font-normal tracking-tight md:text-4xl'>
-            {t('Ready to simplify')}
-            <br />
-            <span className='text-muted-foreground'>
-              {t('your AI integration?')}
-            </span>
-          </h2>
-          <p className='text-muted-foreground mx-auto mt-4 max-w-lg text-[14.5px] leading-[1.7]'>
-            {t(
-              'Deploy your own gateway and start routing requests through your configured upstream services.'
-            )}
-          </p>
-          <div className='mt-8 flex flex-wrap items-center justify-center gap-3.5'>
-            <Button
-              className='group h-11 rounded-full px-7 text-sm font-medium'
-              render={<Link to='/sign-up' />}
-            >
-              {t('Get Started')}
-              <ArrowRight className='ml-1.5 size-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
-            </Button>
-            <Button
-              variant='outline'
-              className='border-border hover:border-foreground/40 hover:bg-muted/40 h-11 rounded-full px-6 text-sm font-medium'
-              render={<Link to='/pricing' />}
-            >
-              {t('查看模型费率')}
-            </Button>
+          {/* Subtle Architectural Grid Backdrop */}
+          <div
+            aria-hidden='true'
+            className='pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.03)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_40%,black_20%,transparent_85%)] bg-[size:40px_40px] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)]'
+          />
+
+          <div className='relative z-10 flex flex-col items-center'>
+            {/* Floating Optical Brand Emblem */}
+            <div className='mb-4 flex size-13 items-center justify-center rounded-[16px] border border-white/20 bg-[#0B0F19] shadow-[0_14px_30px_-8px_rgba(37,99,235,0.35),inset_0_1px_0_rgba(255,255,255,0.2)]'>
+              <Logo className='size-7.5' />
+            </div>
+
+            <h2 className='mb-3 text-[clamp(1.75rem,2.6vw,2.35rem)] leading-[1.2] font-extrabold tracking-[-0.025em] text-[#0F172A] dark:text-white'>
+              {t('Start Using {{name}} Today', { name: displayName })}
+            </h2>
+            <p className='mx-auto mb-7 max-w-[480px] text-[15px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
+              {t(
+                'Sign up to generate an API key and connect your existing development tools and applications to flagship models seamlessly.'
+              )}
+            </p>
+
+            <div className='flex flex-wrap items-center justify-center gap-3'>
+              <Button
+                className='group h-11 rounded-full border border-[#0F172A] bg-[#0F172A] px-8 text-[14px] font-semibold text-white shadow-[0_8px_20px_-4px_rgba(15,23,42,0.22)] transition-all hover:-translate-y-px hover:bg-[#1E293B] dark:border-white dark:bg-white dark:text-[#0F172A]'
+                render={
+                  <Link
+                    to={props.isAuthenticated ? '/dashboard' : '/sign-up'}
+                  />
+                }
+              >
+                <span>
+                  {props.isAuthenticated ? t('Go to Dashboard') : t('Sign up')}
+                </span>
+                <ArrowRight className='ml-1.5 size-4 transition-transform duration-200 group-hover:translate-x-0.5' />
+              </Button>
+              <Button
+                variant='outline'
+                className='h-11 rounded-full border border-[#0F172A]/14 bg-white px-7 text-[14px] font-semibold text-[#0F172A] shadow-[0_2px_6px_rgba(15,23,42,0.03)] transition-all hover:border-[#0F172A]/25 hover:bg-[#F8FAFC] dark:border-white/20 dark:bg-zinc-900 dark:text-zinc-100'
+                render={<Link to='/pricing' />}
+              >
+                {t('Explore Model Square')}
+              </Button>
+            </div>
           </div>
         </AnimateInView>
       </div>

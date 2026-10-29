@@ -16,46 +16,66 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { SVGProps } from 'react'
+import { useId, type SVGProps } from 'react'
 
 import { cn } from '@/lib/utils'
 
-export function Logo({ className, ...props }: SVGProps<SVGSVGElement>) {
+export function Logo(props: SVGProps<SVGSVGElement>) {
+  const { className, ...rest } = props
+  const uid = useId().replaceAll(':', '')
+  const mainGradId = `mihouo-flame-main-${uid}`
+  const wingGradId = `mihouo-flame-wing-${uid}`
+
   return (
     <svg
       id='newapi-logo'
-      viewBox='0 0 44 44'
+      viewBox='0 0 64 64'
       xmlns='http://www.w3.org/2000/svg'
       height='36'
       width='36'
       fill='none'
-      stroke='currentColor'
-      strokeWidth='0.85'
-      strokeLinecap='round'
-      strokeLinejoin='round'
       className={cn('size-9', className)}
-      {...props}
+      {...rest}
     >
-      <title>MIHOUO · 弥火</title>
-      {/* Outer 3D polyhedron perimeter */}
-      <polygon
-        points='22,2.5 38.5,11.5 38.5,32.5 22,41.5 5.5,32.5 5.5,11.5'
-        strokeWidth='0.95'
+      <title>MIHOUO · 觅火</title>
+      <defs>
+        <linearGradient
+          id={mainGradId}
+          x1='16'
+          y1='56'
+          x2='48'
+          y2='8'
+          gradientUnits='userSpaceOnUse'
+        >
+          <stop offset='0%' stopColor='#1E40AF' />
+          <stop offset='50%' stopColor='#2563EB' />
+          <stop offset='100%' stopColor='#06B6D4' />
+        </linearGradient>
+        <linearGradient
+          id={wingGradId}
+          x1='12'
+          y1='50'
+          x2='34'
+          y2='16'
+          gradientUnits='userSpaceOnUse'
+        >
+          <stop offset='0%' stopColor='#3B82F6' />
+          <stop offset='100%' stopColor='#38BDF8' />
+        </linearGradient>
+      </defs>
+      <path
+        d='M35.5 6C35.5 6 53 21.8 53 38.2C53 50.2 43.6 58 32 58C20.4 58 11 50.2 11 38.2C11 28.5 17.2 20.5 23.8 15.4C22.8 21.6 25.8 26 30.2 27.6C27.4 19.4 30.5 11.5 35.5 6Z'
+        fill={`url(#${mainGradId})`}
       />
-      {/* Inner rotated octahedron star facets */}
-      <polygon points='22,2.5 38.5,32.5 5.5,32.5' strokeOpacity='0.75' />
-      <polygon points='5.5,11.5 38.5,11.5 22,41.5' strokeOpacity='0.75' />
-      {/* Internal 3D equatorial ring vertices */}
-      <polygon
-        points='22,10 31.5,16.5 31.5,27.5 22,34 12.5,27.5 12.5,16.5'
-        strokeOpacity='0.55'
+      <path
+        d='M23.8 15.4C17.2 20.5 11 28.5 11 38.2C11 47.2 17.2 54.5 26 57.2C20.6 52.6 18.8 44.8 21.8 36.8C24 31.4 27.6 28.8 30.2 27.6C25.8 26 22.8 21.6 23.8 15.4Z'
+        fill={`url(#${wingGradId})`}
+        opacity='0.9'
       />
-      {/* Fine internal diagonal struts */}
-      <line x1='22' y1='2.5' x2='22' y2='41.5' strokeOpacity='0.5' />
-      <line x1='5.5' y1='11.5' x2='38.5' y2='32.5' strokeOpacity='0.5' />
-      <line x1='38.5' y1='11.5' x2='5.5' y2='32.5' strokeOpacity='0.5' />
-      {/* Center focal vertex */}
-      <circle cx='22' cy='22' r='1.3' fill='currentColor' />
+      <path
+        d='M32 27C33.7 34.4 35.8 36.5 43.2 38.2C35.8 39.9 33.7 42 32 49.4C30.3 42 28.2 39.9 20.8 38.2C28.2 36.5 30.3 34.4 32 27Z'
+        fill='#FFFFFF'
+      />
     </svg>
   )
 }

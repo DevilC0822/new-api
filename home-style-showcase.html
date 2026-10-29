@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIHOUO · 觅火 — 统一大模型 API 网关</title>
+  <link
+    id="site-favicon"
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='8' y1='6' x2='56' y2='58' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%230F172A'/%3E%3Cstop offset='100%25' stop-color='%23090D16'/%3E%3C/linearGradient%3E%3ClinearGradient id='flameMain' x1='18' y1='52' x2='45' y2='10' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%231D4ED8'/%3E%3Cstop offset='52%25' stop-color='%232563EB'/%3E%3Cstop offset='100%25' stop-color='%2338BDF8'/%3E%3C/linearGradient%3E%3ClinearGradient id='flameWing' x1='16' y1='48' x2='34' y2='20' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0%25' stop-color='%233B82F6'/%3E%3Cstop offset='100%25' stop-color='%2367E8F9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='60' height='60' rx='16' fill='url(%23bg)' stroke='%23334155' stroke-width='1.5' stroke-opacity='0.6'/%3E%3Cpath d='M34.5 9.5C34.5 9.5 49 22.8 49 36.8C49 46.8 41.4 54 32 54C22.6 54 15 46.8 15 36.8C15 28.6 20.2 21.8 25.5 17.5C24.8 22.8 27.2 26.5 30.8 27.8C28.4 20.8 30.8 14.2 34.5 9.5Z' fill='url(%23flameMain)'/%3E%3Cpath d='M25.5 17.5C20.2 21.8 15 28.6 15 36.8C15 44.5 20.1 50.8 27.2 53.1C22.8 49.2 21.2 42.5 23.8 35.8C25.6 31.2 28.6 28.8 30.8 27.8C27.2 26.5 24.8 22.8 25.5 17.5Z' fill='url(%23flameWing)' opacity='0.88'/%3E%3Cpath d='M32 27.5C33.4 33.8 35.2 35.6 41.5 37C35.2 38.4 33.4 40.2 32 46.5C30.6 40.2 28.8 38.4 22.5 37C28.8 35.6 30.6 33.8 32 27.5Z' fill='%23FFFFFF'/%3E%3C/svg%3E"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ==========================================================================
+       MIHOUO · 觅火 — Clean Light Design System
+       ========================================================================== */
+    :root {
+      --bg-page: #FBFBFD;
+      --bg-subtle: #F4F6FA;
+      --bg-card: #FFFFFF;
+      --ink-950: #0F172A;
+      --ink-700: #334155;
+      --ink-500: #64748B;
+      --ink-400: #94A3B8;
+      --border-hairline: rgba(15, 23, 42, 0.08);
+      --border-strong: rgba(15, 23, 42, 0.14);
+      --accent-blue: #2563EB;
+      --accent-cyan: #0891B2;
+      --accent-emerald: #059669;
+
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--ink-950);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .ambient-backdrop {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 50% -10%, rgba(37, 99, 235, 0.05), transparent 70%),
+        radial-gradient(ellipse 45% 35% at 85% 15%, rgba(8, 145, 178, 0.04), transparent 65%);
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==========================================================================
+       FLOATING HEADER
+       ========================================================================== */
+    .b-header {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      width: min(1200px, calc(100% - 48px));
+      height: 58px;
+      padding: 0 16px 0 22px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-lockup {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--ink-950);
+    }
+
+    .brand-wordmark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-en {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+    }
+
+    .brand-sep {
+      width: 1px;
+      height: 12px;
+      background: rgba(15, 23, 42, 0.18);
+    }
+
+    .brand-cn {
+      font-size: 13.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--ink-700);
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    @media (max-width: 860px) {
+      .nav-center { display: none; }
+    }
+
+    .nav-item {
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--ink-500);
+      text-decoration: none;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+
+    .nav-item:hover {
+      color: var(--ink-950);
+      background: rgba(15, 23, 42, 0.04);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 20px;
+      border-radius: 9999px;
+      background: var(--ink-950);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--ink-950);
+      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      background: #1E293B;
+      box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.25);
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 20px;
+      border-radius: 9999px;
+      background: #FFFFFF;
+      color: var(--ink-950);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--border-strong);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--ink-950);
+      background: #F8FAFC;
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       ACT 01: HERO SECTION (Strict Line-Break & Alignment Control)
+       ========================================================================== */
+    .hero-section {
+      padding: 132px 0 64px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      align-items: center;
+      gap: 48px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 13px;
+      border-radius: 9999px;
+      background: rgba(37, 99, 235, 0.06);
+      border: 1px solid rgba(37, 99, 235, 0.15);
+      color: var(--accent-blue);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .badge-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Controlled font-size & nowrap lines so it NEVER orphans a character */
+    .hero-title {
+      font-size: clamp(2.2rem, 3.5vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: -0.03em;
+      color: var(--ink-950);
+      margin-bottom: 20px;
+    }
+
+    .hero-title-line {
+      display: block;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 520px) {
+      .hero-title-line { white-space: normal; }
+    }
+
+    .hero-title-accent {
+      background: linear-gradient(135deg, #2563EB 0%, #0891B2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-lead {
+      font-size: 15.5px;
+      line-height: 1.75;
+      color: var(--ink-500);
+      max-width: 520px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-lead { margin-left: auto; margin-right: auto; }
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero-actions { justify-content: center; }
+    }
+
+    .hero-actions .btn-primary,
+    .hero-actions .btn-outline {
+      padding: 12px 26px;
+      font-size: 14px;
+    }
+
+    /* Interactive Model Selector */
+    .deck-selector {
+      margin-top: 32px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border-hairline);
+    }
+
+    .deck-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-400);
+      margin-bottom: 10px;
+    }
+
+    .deck-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .deck-chips { justify-content: center; }
+    }
+
+    .model-chip {
+      appearance: none;
+      border: 1px solid var(--border-hairline);
+      background: #FFFFFF;
+      color: var(--ink-700);
+      padding: 6px 13px;
+      border-radius: 9999px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s var(--ease-out);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    }
+
+    .model-chip:hover {
+      border-color: var(--ink-950);
+      color: var(--ink-950);
+    }
+
+    .model-chip.active {
+      background: var(--ink-950);
+      color: #FFFFFF;
+      border-color: var(--ink-950);
+      box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.22);
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    /* Right Column: Zero-Intersection 120fps Spring Fanned Card Deck */
+    .stage-3d {
+      position: relative;
+      height: 430px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .aurora-glow {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.16) 0%, rgba(8, 145, 178, 0.10) 45%, transparent 72%);
+      filter: blur(36px);
+      transition: background 0.5s ease;
+      pointer-events: none;
+    }
+
+    .monolith-stack {
+      position: relative;
+      width: min(432px, 100%);
+      height: 360px;
+    }
+
+    .deck-card {
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: #FFFFFF;
+      border: 1px solid rgba(15, 23, 42, 0.085);
+      box-shadow:
+        0 24px 48px -14px rgba(15, 23, 42, 0.10),
+        0 4px 12px -4px rgba(15, 23, 42, 0.04);
+      padding: 26px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transform-origin: 50% 75%;
+      will-change: transform, opacity;
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .deck-card[data-active="true"] {
+      box-shadow:
+        0 30px 64px -16px rgba(15, 23, 42, 0.14),
+        0 8px 20px -6px rgba(37, 99, 235, 0.07),
+        0 0 0 1px rgba(15, 23, 42, 0.08);
+      cursor: default;
+    }
+
+    .deck-card[data-active="false"] {
+      background: #F8FAFC;
+      cursor: pointer;
+    }
+
+    /* Top color accent bar per model */
+    .deck-card-accent {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    /* Inner progress bar animation when active */
+    .card-rate-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transform-origin: left center;
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: scaleX(0.35);
+    }
+
+    .deck-card[data-active="true"] .card-rate-bar-fill {
+      transform: scaleX(1);
+    }
+
+    .monolith-stream-box {
+      padding: 13px 15px;
+      border-radius: 14px;
+      background: #F8FAFC;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: var(--ink-700);
+    }
+
+    .monolith-thinking {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-blue);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Trust Ribbon below Hero (4 Equal Columns) */
+    .trust-ribbon {
+      margin-top: 52px;
+      padding: 26px 32px;
+      border-radius: 22px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 12px 30px -18px rgba(15, 23, 42, 0.04);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 920px) {
+      .trust-ribbon { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .trust-ribbon { grid-template-columns: 1fr; }
+    }
+
+    .trust-cell {
+      padding-left: 16px;
+      border-left: 2px solid rgba(37, 99, 235, 0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .trust-val {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--ink-950);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .trust-val span {
+      color: var(--accent-blue);
+      font-size: 18px;
+      margin-left: 2px;
+    }
+
+    .trust-label {
+      font-size: 12.5px;
+      color: var(--ink-500);
+      margin-top: 4px;
+    }
+
+    /* ==========================================================================
+       SHARED SECTION HEADERS
+       ========================================================================== */
+    .section-block {
+      padding: 88px 0;
+      border-top: 1px solid var(--border-hairline);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .sec-kicker {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+    }
+
+    .sec-title {
+      font-size: clamp(1.75rem, 2.8vw, 2.35rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--ink-950);
+    }
+
+    .sec-desc {
+      font-size: 14px;
+      color: var(--ink-500);
+      max-width: 420px;
+      line-height: 1.68;
+    }
+
+    /* ==========================================================================
+       ACT 02: 12-COL BENTO CAPABILITIES
+       ========================================================================== */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .bento-card {
+      background: var(--bg-subtle);
+      border-radius: 24px;
+      padding: 32px;
+      border: 1px solid rgba(15, 23, 42, 0.05);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      transition: all 0.25s var(--ease-out);
+    }
+
+    .bento-card:hover {
+      background: #EEF2F8;
+      transform: translateY(-2px);
+      box-shadow: 0 18px 40px -18px rgba(15, 23, 42, 0.06);
+    }
+
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+
+    @media (max-width: 920px) {
+      .span-7, .span-5 { grid-column: span 12; }
+    }
+
+    .bento-card-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-950);
+      margin-bottom: 8px;
+    }
+
+    .bento-card-desc {
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--ink-500);
+    }
+
+    .bento-widget {
+      background: #FFFFFF;
+      border-radius: 16px;
+      padding: 18px 20px;
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.02);
+    }
+
+    .eco-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .eco-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .eco-tag {
+      padding: 5px 11px;
+      border-radius: 9999px;
+      background: #F8FAFC;
+      border: 1px solid var(--border-hairline);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-700);
+    }
+
+    .eco-hub {
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: var(--accent-blue);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .ledger-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #E2E8F0;
+      display: flex;
+      overflow: hidden;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .seg-cache { width: 68%; background: var(--accent-blue); }
+    .seg-think { width: 18%; background: var(--accent-cyan); }
+    .seg-io { width: 14%; background: var(--ink-950); }
+
+    .ledger-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--ink-500);
+    }
+
+    .sec-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 640px) {
+      .sec-grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .sec-box {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border-hairline);
+    }
+
+    .sec-box-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-950);
+      margin-bottom: 3px;
+    }
+
+    .sec-box-sub {
+      font-size: 12px;
+      color: var(--ink-500);
+    }
+
+    /* ==========================================================================
+       ACT 03: 12 REAL MODELS & SEGMENTED VENDOR FILTER BAR
+       ========================================================================== */
+    .filter-capsule-bar {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px;
+      border-radius: 9999px;
+      background: #F1F5F9;
+      border: 1px solid rgba(15, 23, 42, 0.075);
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--ink-500);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 15px;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    /* ==========================================================================
+       ACT 03: AI GATEWAY CONVERGENCE & SMART ROUTING STAGE
+       ========================================================================== */
+    @keyframes mihouo-beam-flow {
+      from { stroke-dashoffset: 240; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes mihouo-radar-ring {
+      0% { transform: scale(0.78); opacity: 0.75; }
+      100% { transform: scale(1.68); opacity: 0; }
+    }
+    @keyframes mihouo-orbit-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes mihouo-marquee-left {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-50%, 0, 0); }
+    }
+    @keyframes mihouo-marquee-right {
+      from { transform: translate3d(-50%, 0, 0); }
+      to { transform: translate3d(0, 0, 0); }
+    }
+
+    .router-stage-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 30px;
+      border: 1px solid var(--border-hairline);
+      background:
+        radial-gradient(ellipse 65% 55% at 50% 42%, rgba(37, 99, 235, 0.06) 0%, transparent 70%),
+        linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      box-shadow: 0 24px 60px -24px rgba(15, 23, 42, 0.07), inset 0 1px 0 #FFFFFF;
+    }
+
+    .router-grid-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 25%, transparent 90%);
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 25%, transparent 90%);
+    }
+
+    .router-topology-grid {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 4fr 4fr 4fr;
+      align-items: center;
+      padding: 40px 36px;
+    }
+
+    @media (max-width: 980px) {
+      .router-topology-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 28px 22px;
+      }
+      .router-svg-conduits { display: none; }
+    }
+
+    .router-node-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(15, 23, 42, 0.07);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 12px 16px;
+      box-shadow: 0 8px 20px -10px rgba(15, 23, 42, 0.05);
+      transition: all 0.25s var(--ease-out);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .router-cluster-card {
+      cursor: pointer;
+    }
+
+    .router-cluster-card.active {
+      transform: translateX(-2px);
+      background: #FFFFFF;
+      box-shadow: 0 12px 28px -10px rgba(15, 23, 42, 0.1);
+    }
+
+    .mihouo-beam-in {
+      stroke-dasharray: 18 222;
+      animation: mihouo-beam-flow 2.8s linear infinite;
+    }
+
+    .mihouo-beam-out {
+      stroke-dasharray: 22 218;
+      animation: mihouo-beam-flow 2.4s linear infinite;
+    }
+
+    .mihouo-radar-ring {
+      animation: mihouo-radar-ring 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+    }
+
+    .mihouo-radar-ring-delayed {
+      animation: mihouo-radar-ring 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) 1.6s infinite;
+    }
+
+    .mihouo-orbit-spin {
+      animation: mihouo-orbit-spin 28s linear infinite;
+    }
+
+    .router-stream-bar {
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid rgba(15, 23, 42, 0.07);
+      background: rgba(248, 250, 252, 0.85);
+      padding: 16px 0;
+    }
+
+    .router-marquee-mask {
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+    }
+
+    .router-marquee-left {
+      display: flex;
+      width: max-content;
+      animation: mihouo-marquee-left 42s linear infinite;
+    }
+
+    .router-marquee-right {
+      display: flex;
+      width: max-content;
+      margin-top: 10px;
+      animation: mihouo-marquee-right 46s linear infinite;
+    }
+
+    .router-marquee-mask:hover .router-marquee-left,
+    .router-marquee-mask:hover .router-marquee-right {
+      animation-play-state: paused;
+    }
+
+    .stream-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-right: 14px;
+      padding: 8px 16px 8px 14px;
+      border-radius: 9999px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.05);
+      text-decoration: none;
+      color: var(--ink-950);
+      white-space: nowrap;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .stream-capsule:hover {
+      transform: translateY(-2px);
+      border-color: rgba(37, 99, 235, 0.3);
+      box-shadow: 0 10px 22px -6px rgba(37, 99, 235, 0.12);
+    }
+
+    /* ==========================================================================
+       ACT 04: 3-STEP ONBOARDING CARDS
+       ========================================================================== */
+    .steps-prism-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 920px) {
+      .steps-prism-grid { grid-template-columns: 1fr; }
+    }
+
+    .step-prism-card {
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      border-radius: 24px;
+      border: 1px solid var(--border-hairline);
+      padding: 28px;
+      box-shadow: 0 12px 32px -18px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 22px;
+      transition: transform 0.25s var(--ease-out), border-color 0.25s ease;
+    }
+
+    .step-prism-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(37, 99, 235, 0.25);
+    }
+
+    .step-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .step-index-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-num-cube {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.16);
+      color: var(--accent-blue);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-stage-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--ink-400);
+    }
+
+    .step-time-pill {
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: #F1F5F9;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-700);
+    }
+
+    .step-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink-950);
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 13.5px;
+      line-height: 1.68;
+      color: var(--ink-500);
+      min-height: 68px;
+    }
+
+    .step-visual-preview {
+      background: #FFFFFF;
+      border-radius: 14px;
+      border: 1px solid var(--border-hairline);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-kv-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      height: 26px;
+    }
+
+    .step-code-chip {
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: #F8FAFC;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: var(--ink-950);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .step-scope-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .step-scope-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: rgba(37, 99, 235, 0.06);
+      color: var(--accent-blue);
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* ==========================================================================
+       ACT 05: CTA BANNER & FOOTER
+       ========================================================================== */
+    .finale-banner {
+      border-radius: 28px;
+      background:
+        radial-gradient(ellipse 65% 70% at 50% 0%, rgba(37, 99, 235, 0.07), transparent 70%),
+        linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      border: 1px solid var(--border-hairline);
+      box-shadow: 0 20px 48px -24px rgba(15, 23, 42, 0.06);
+      padding: 64px 32px;
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .footer-bar {
+      border-top: 1px solid var(--border-hairline);
+      padding: 32px 0 48px;
+      font-size: 13px;
+      color: var(--ink-500);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--ink-500);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--ink-950);
+    }
+
+    /* ==========================================================================
+       FLOATING FAVICON & BRAND ICON STUDIO (Interactive Preview Switcher)
+       ========================================================================== */
+    .favicon-studio {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 200;
+      width: 356px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      border-radius: 22px;
+      box-shadow:
+        0 24px 48px -12px rgba(15, 23, 42, 0.14),
+        0 4px 12px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 #FFFFFF;
+      padding: 18px;
+      transition: transform 0.28s var(--ease-out), opacity 0.25s ease;
+    }
+
+    .favicon-studio.collapsed {
+      width: auto;
+      padding: 8px 14px;
+      border-radius: 9999px;
+    }
+
+    .favicon-studio.collapsed .studio-body {
+      display: none;
+    }
+
+    .studio-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .studio-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-950);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .studio-toggle-btn {
+      appearance: none;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #F8FAFC;
+      color: var(--ink-500);
+      border-radius: 9999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .studio-toggle-btn:hover {
+      color: var(--ink-950);
+      border-color: rgba(15, 23, 42, 0.18);
+    }
+
+    .studio-tab-mock {
+      margin-top: 13px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .mock-browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    .mock-browser-bar.light {
+      background: #F1F5F9;
+      color: #0F172A;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .mock-browser-bar.dark {
+      background: #0F172A;
+      color: #F8FAFC;
+    }
+
+    .mock-tab-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 10px;
+      border-radius: 7px;
+      max-width: 240px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mock-browser-bar.light .mock-tab-pill {
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+
+    .mock-browser-bar.dark .mock-tab-pill {
+      background: #1E293B;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .studio-options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .studio-opt-btn {
+      appearance: none;
+      background: #F8FAFC;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 12px;
+      padding: 9px 10px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .studio-opt-btn:hover {
+      background: #FFFFFF;
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+
+    .studio-opt-btn.active {
+      background: #EFF6FF;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+    }
+
+    .studio-opt-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-950);
+      line-height: 1.25;
+    }
+
+    .studio-opt-sub {
+      font-size: 10.5px;
+      color: var(--ink-500);
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-backdrop" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <!-- ======================================================================
+         TOP FLOATING HEADER
+         ====================================================================== -->
+    <header class="b-header">
+      <a href="#top" class="brand-lockup">
+        <span id="header-brand-icon" style="display: inline-flex; width: 28px; height: 28px; flex-shrink: 0;">
+          <svg viewBox="0 0 64 64" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hdrBg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0F172A"/>
+                <stop offset="100%" stop-color="#090D16"/>
+              </linearGradient>
+              <linearGradient id="hdrFlameMain" x1="18" y1="52" x2="45" y2="10" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#1D4ED8"/>
+                <stop offset="52%" stop-color="#2563EB"/>
+                <stop offset="100%" stop-color="#38BDF8"/>
+              </linearGradient>
+              <linearGradient id="hdrFlameWing" x1="16" y1="48" x2="34" y2="20" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3B82F6"/>
+                <stop offset="100%" stop-color="#67E8F9"/>
+              </linearGradient>
+            </defs>
+            <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#hdrBg)" stroke="#334155" stroke-width="1.5" stroke-opacity="0.6"/>
+            <path d="M34.5 9.5C34.5 9.5 49 22.8 49 36.8C49 46.8 41.4 54 32 54C22.6 54 15 46.8 15 36.8C15 28.6 20.2 21.8 25.5 17.5C24.8 22.8 27.2 26.5 30.8 27.8C28.4 20.8 30.8 14.2 34.5 9.5Z" fill="url(#hdrFlameMain)"/>
+            <path d="M25.5 17.5C20.2 21.8 15 28.6 15 36.8C15 44.5 20.1 50.8 27.2 53.1C22.8 49.2 21.2 42.5 23.8 35.8C25.6 31.2 28.6 28.8 30.8 27.8C27.2 26.5 24.8 22.8 25.5 17.5Z" fill="url(#hdrFlameWing)" opacity="0.88"/>
+            <path d="M32 27.5C33.4 33.8 35.2 35.6 41.5 37C35.2 38.4 33.4 40.2 32 46.5C30.6 40.2 28.8 38.4 22.5 37C28.8 35.6 30.6 33.8 32 27.5Z" fill="#FFFFFF"/>
+          </svg>
+        </span>
+        <div class="brand-wordmark">
+          <span class="brand-en">MIHOUO</span>
+          <span class="brand-sep"></span>
+          <span class="brand-cn">觅火</span>
+        </div>
+      </a>
+
+      <nav class="nav-center" aria-label="主导航">
+        <a href="#top" class="nav-item">首页</a>
+        <a href="#models" class="nav-item">模型广场</a>
+        <a href="#architecture" class="nav-item">核心特性</a>
+        <a href="#models" class="nav-item">调用榜单</a>
+        <a href="#onboarding" class="nav-item">接入说明</a>
+      </nav>
+
+      <div class="nav-right">
+        <a href="#models" class="btn-outline" style="padding: 7px 15px; font-size: 12.5px;">价格一览</a>
+        <a href="#onboarding" class="btn-primary" style="padding: 7px 16px; font-size: 12.5px;">进入控制台 →</a>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         ACT 01: HERO SECTION
+         ====================================================================== -->
+    <section class="hero-section" id="top">
+      <div class="container">
+        <div class="hero-grid">
+          <!-- Left Column -->
+          <div>
+            <div class="hero-badge">
+              <span class="badge-pulse"></span>
+              官方接口直通 · 原价 0.7 折起 · 按量实时结算
+            </div>
+
+            <h1 class="hero-title">
+              <span class="hero-title-line">面向研发与生产的</span>
+              <span class="hero-title-line hero-title-accent">统一大模型网关</span>
+            </h1>
+
+            <p class="hero-lead">
+              一个 API Key 即可调用 5 大厂商旗下的 12 款主力编码与推理模型。全系同时兼容 Anthropic 与 OpenAI 官方接口，无需安装插件即可接入 Claude Code、Codex CLI、Cursor 与主流客户端。
+            </p>
+
+            <div class="hero-actions">
+              <a href="#onboarding" class="btn-primary">开始使用 →</a>
+              <a href="#models" class="btn-outline">查看模型与定价</a>
+            </div>
+
+            <div class="deck-selector">
+              <div class="deck-label">点击模型查看实时费率与分组折扣</div>
+              <div class="deck-chips" role="tablist">
+                <button class="model-chip active" data-model="0">
+                  <span class="chip-dot" style="background: #2563EB;"></span>
+                  Claude Opus 5.5
+                </button>
+                <button class="model-chip" data-model="1">
+                  <span class="chip-dot" style="background: #059669;"></span>
+                  GPT-6 Astra
+                </button>
+                <button class="model-chip" data-model="2">
+                  <span class="chip-dot" style="background: #0891B2;"></span>
+                  DeepSeek V4.1 Flash
+                </button>
+                <button class="model-chip" data-model="3">
+                  <span class="chip-dot" style="background: #6366F1;"></span>
+                  GLM-5.3
+                </button>
+                <button class="model-chip" data-model="4">
+                  <span class="chip-dot" style="background: #D97706;"></span>
+                  Kimi K3.1 Pro
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: 5-Card Spring Fanned Deck -->
+          <div class="stage-3d">
+            <div class="aurora-glow" id="hero-aurora"></div>
+            <div class="monolith-stack" id="monolith-stack" aria-live="polite">
+              <!-- Populated dynamically with all 5 real model cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 4-Column Key Facts Ribbon -->
+        <div class="trust-ribbon">
+          <div class="trust-cell">
+            <div class="trust-val">0.7<span>折起</span></div>
+            <div class="trust-label">GPT-6 Astra 官方 0.7 折，Claude / GLM 官方 2 折</div>
+          </div>
+          <div class="trust-cell">
+            <div class="trust-val">双协议<span>直通</span></div>
+            <div class="trust-label">12 款模型均支持 Anthropic 与 OpenAI 接口格式</div>
+          </div>
+          <div class="trust-cell">
+            <div class="trust-val">90%<span>以上</span></div>
+            <div class="trust-label">上下文缓存读取 (cr) 叠加分组折扣后的成本减免</div>
+          </div>
+          <div class="trust-cell">
+            <div class="trust-val">Auto<span>分组</span></div>
+            <div class="trust-label">单个令牌自动按模型名称匹配对应的最优折扣通道</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ACT 02: CORE CAPABILITIES (12-Col Bento Grid)
+         ====================================================================== -->
+    <section class="section-block" id="architecture">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="sec-kicker">CAPABILITIES</div>
+            <h2 class="sec-title">专为高频编码与工程团队设计</h2>
+          </div>
+          <p class="sec-desc">
+            省去繁琐的多平台充值与协议适配工作，提供稳定、透明的模型接入与团队额度管理。
+          </p>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Card 1 (7 Cols) -->
+          <div class="bento-card span-7">
+            <div>
+              <div class="sec-kicker" style="margin-bottom: 6px;">PROTOCOL COMPATIBILITY</div>
+              <h3 class="bento-card-title">全系模型同时支持 Anthropic 与 OpenAI 接口</h3>
+              <p class="bento-card-desc">
+                平台接入的全部 12 款模型均同时开放 <code style="font-family: var(--font-mono);">/v1/messages</code>、<code style="font-family: var(--font-mono);">/v1/responses</code> 与 <code style="font-family: var(--font-mono);">/v1/chat/completions</code> 接口。您可以在 Claude Code 中直接调用 GPT-6、DeepSeek V4、GLM-5.3 或 Kimi K3，无需额外部署协议转换服务。
+              </p>
+            </div>
+
+            <div class="bento-widget" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(15, 23, 42, 0.06);">
+                <span style="color: var(--ink-500); font-weight: 600;">兼容接口格式</span>
+                <span style="font-family: var(--font-mono); color: var(--accent-blue); font-weight: 600;">/v1/messages · /v1/responses · /v1/chat/completions</span>
+              </div>
+              <div class="eco-tags">
+                <span class="eco-tag">Claude Code</span>
+                <span class="eco-tag">Codex CLI</span>
+                <span class="eco-tag">Cursor</span>
+                <span class="eco-tag">Cherry Studio</span>
+                <span class="eco-tag">CC Switch</span>
+                <span class="eco-tag">AionUI</span>
+                <span class="eco-tag">DeepChat</span>
+                <span class="eco-tag">LobeChat</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 (5 Cols) -->
+          <div class="bento-card span-5">
+            <div>
+              <div class="sec-kicker" style="margin-bottom: 6px;">TRANSPARENT BILLING</div>
+              <h3 class="bento-card-title">缓存分级、上下文阶梯与忙闲时计费</h3>
+              <p class="bento-card-desc">
+                账单明细独立拆分输入 (<code style="font-family: var(--font-mono);">p</code>)、缓存读取 (<code style="font-family: var(--font-mono);">cr</code>)、5m/1h 缓存写入 (<code style="font-family: var(--font-mono);">cc/cc1h</code>) 与输出 (<code style="font-family: var(--font-mono);">c</code>)。DeepSeek 系列支持 UTC 闲时自动半价。
+              </p>
+            </div>
+
+            <div class="bento-widget">
+              <div class="ledger-track">
+                <div class="seg-cache"></div>
+                <div class="seg-think"></div>
+                <div class="seg-io"></div>
+              </div>
+              <div class="ledger-legend">
+                <span style="color: var(--accent-blue); font-weight: 600;">● 缓存读取低至 $0.00225/M</span>
+                <span style="color: var(--accent-cyan); font-weight: 600;">● 闲时自动 5 折</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 (5 Cols) -->
+          <div class="bento-card span-5">
+            <div>
+              <div class="sec-kicker" style="margin-bottom: 6px;">SMART ROUTING</div>
+              <h3 class="bento-card-title"><code style="font-family: var(--font-mono);">auto</code> 智能分组：单密钥自动匹配折扣</h3>
+              <p class="bento-card-desc">
+                无需为不同模型创建多个分组 Key。将令牌分组设为默认的 <code style="font-family: var(--font-mono);">auto</code>，系统会根据请求中的模型名称自动路由至对应的折扣分组。
+              </p>
+            </div>
+
+            <div class="bento-widget" style="display: flex; flex-direction: column; gap: 8px; font-family: var(--font-mono); font-size: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: var(--accent-blue); font-weight: 600;">● Claude-2折 / 3折 / 9.5折</span>
+                <span style="color: var(--ink-500);">Anthropic 模型</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px dashed rgba(15,23,42,0.08);">
+                <span style="color: var(--accent-emerald); font-weight: 600;">● GPT-0.7折 / GLM-2折 / Kimi-3.5折</span>
+                <span style="color: var(--ink-500);">自动按模型匹配</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 (7 Cols) -->
+          <div class="bento-card span-7">
+            <div>
+              <div class="sec-kicker" style="margin-bottom: 6px;">SECURITY &amp; CLIENT SETUP</div>
+              <h3 class="bento-card-title">请求内容不落盘，支持主流客户端一键导入</h3>
+              <p class="bento-card-desc">
+                网关仅记录 Token 用量与耗时用于计费审计，不存储任何代码或对话正文。控制台内置 Cherry Studio、CC Switch、AionUI、DeepChat、LobeChat 等客户端的一键导入入口。
+              </p>
+            </div>
+
+            <div class="sec-grid-3">
+              <div class="sec-box">
+                <div class="sec-box-title">正文零留存</div>
+                <div class="sec-box-sub">仅流式转发，不存储业务载荷</div>
+              </div>
+              <div class="sec-box">
+                <div class="sec-box-title">子令牌限额</div>
+                <div class="sec-box-sub">支持独立额度、IP 与模型白名单</div>
+              </div>
+              <div class="sec-box">
+                <div class="sec-box-title">一键导入配置</div>
+                <div class="sec-box-sub">支持 10 余款主流桌面与网页客户端</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ACT 03: AI GATEWAY CONVERGENCE & SMART ROUTING STAGE
+         ====================================================================== -->
+    <section class="section-block" id="models">
+      <div class="container">
+        <div style="text-align: center; margin-bottom: 44px;">
+          <div class="sec-kicker" style="justify-content: center;">UNIFIED MODEL ROUTER</div>
+          <h2 class="sec-title" style="font-size: clamp(1.85rem, 3vw, 2.6rem);">五大厂商旗舰算力，汇于同一密钥</h2>
+          <p style="max-width: 650px; margin: 14px auto 0; font-size: 15px; line-height: 1.75; color: var(--ink-500);">
+            告别多平台密钥轮换与散乱账单。无论是 Claude Code、Codex CLI 还是官方 SDK，穿过觅火网关即可自动匹配最优折扣分组与满血模型。
+          </p>
+        </div>
+
+        <div class="router-stage-card" id="routerStage">
+          <div class="router-grid-bg" aria-hidden="true"></div>
+
+          <div class="router-topology-grid">
+            <!-- Left Column: 4 Client & Protocol Entry Nodes -->
+            <div style="display: flex; flex-direction: column; gap: 14px; padding-right: 8px;">
+              <div style="display: flex; justify-content: space-between; padding: 0 4px 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 700;">
+                <span style="color: var(--ink-500);">01 · 客户端与请求入口</span>
+                <span style="color: var(--accent-blue);">Anthropic &amp; OpenAI 双协议</span>
+              </div>
+
+              <div class="router-node-card">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #EA580C; box-shadow: 0 0 8px #EA580C;"></span>
+                    Claude Code
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">终端 Agent 原生直连</div>
+                </div>
+                <span class="m-ctx-pill" style="padding: 3px 8px; border-radius: 6px; background: #F8FAFC; font-family: var(--font-mono); font-size: 11px; font-weight: 600;">/v1/messages</span>
+              </div>
+
+              <div class="router-node-card">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #2563EB; box-shadow: 0 0 8px #2563EB;"></span>
+                    Codex CLI &amp; Cursor
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">IDE 与命令行编程工作流</div>
+                </div>
+                <span class="m-ctx-pill" style="padding: 3px 8px; border-radius: 6px; background: #F8FAFC; font-family: var(--font-mono); font-size: 11px; font-weight: 600;">/v1/responses</span>
+              </div>
+
+              <div class="router-node-card">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #0891B2; box-shadow: 0 0 8px #0891B2;"></span>
+                    Cherry Studio / CC Switch
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">桌面端免手填密钥与地址</div>
+                </div>
+                <span class="m-ctx-pill" style="padding: 3px 8px; border-radius: 6px; background: #F8FAFC; font-family: var(--font-mono); font-size: 11px; font-weight: 600;">一键导入配置</span>
+              </div>
+
+              <div class="router-node-card">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #6366F1; box-shadow: 0 0 8px #6366F1;"></span>
+                    Anthropic &amp; OpenAI SDK
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">替换 Base URL 即可无缝迁移</div>
+                </div>
+                <span class="m-ctx-pill" style="padding: 3px 8px; border-radius: 6px; background: #F8FAFC; font-family: var(--font-mono); font-size: 11px; font-weight: 600;">双协议自适应</span>
+              </div>
+            </div>
+
+            <!-- Center Column: SVG Fiber Conduits + MIHOUO Optical Reactor Hub -->
+            <div style="position: relative; height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 380 360" class="router-svg-conduits" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;" fill="none">
+                <!-- Left incoming fibers -->
+                <path d="M 0 54 C 95 54, 95 180, 190 180" stroke="rgba(15,23,42,0.09)" stroke-width="1.5"/>
+                <path d="M 0 54 C 95 54, 95 180, 190 180" stroke="#EA580C" stroke-width="2" stroke-linecap="round" class="mihouo-beam-in"/>
+                <path d="M 0 138 C 95 138, 95 180, 190 180" stroke="rgba(15,23,42,0.09)" stroke-width="1.5"/>
+                <path d="M 0 138 C 95 138, 95 180, 190 180" stroke="#2563EB" stroke-width="2" stroke-linecap="round" class="mihouo-beam-in" style="animation-delay: -0.65s;"/>
+                <path d="M 0 222 C 95 222, 95 180, 190 180" stroke="rgba(15,23,42,0.09)" stroke-width="1.5"/>
+                <path d="M 0 222 C 95 222, 95 180, 190 180" stroke="#0891B2" stroke-width="2" stroke-linecap="round" class="mihouo-beam-in" style="animation-delay: -1.3s;"/>
+                <path d="M 0 306 C 95 306, 95 180, 190 180" stroke="rgba(15,23,42,0.09)" stroke-width="1.5"/>
+                <path d="M 0 306 C 95 306, 95 180, 190 180" stroke="#6366F1" stroke-width="2" stroke-linecap="round" class="mihouo-beam-in" style="animation-delay: -1.95s;"/>
+
+                <!-- Right outgoing fibers -->
+                <path d="M 190 180 C 285 180, 285 36, 380 36" stroke="rgba(234,88,12,0.28)" stroke-width="1.8"/>
+                <path d="M 190 180 C 285 180, 285 36, 380 36" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" class="mihouo-beam-out"/>
+                <path d="M 190 180 C 285 180, 285 108, 380 108" stroke="rgba(16,185,129,0.25)" stroke-width="1.8"/>
+                <path d="M 190 180 C 285 180, 285 108, 380 108" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" class="mihouo-beam-out" style="animation-delay: -0.45s;"/>
+                <path d="M 190 180 C 285 180, 285 180, 380 180" stroke="rgba(37,99,235,0.28)" stroke-width="1.8"/>
+                <path d="M 190 180 C 285 180, 285 180, 380 180" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" class="mihouo-beam-out" style="animation-delay: -0.9s;"/>
+                <path d="M 190 180 C 285 180, 285 252, 380 252" stroke="rgba(99,102,241,0.25)" stroke-width="1.8"/>
+                <path d="M 190 180 C 285 180, 285 252, 380 252" stroke="#6366F1" stroke-width="2.5" stroke-linecap="round" class="mihouo-beam-out" style="animation-delay: -1.35s;"/>
+                <path d="M 190 180 C 285 180, 285 324, 380 324" stroke="rgba(8,145,178,0.25)" stroke-width="1.8"/>
+                <path d="M 190 180 C 285 180, 285 324, 380 324" stroke="#0891B2" stroke-width="2.5" stroke-linecap="round" class="mihouo-beam-out" style="animation-delay: -1.8s;"/>
+              </svg>
+
+              <div class="mihouo-radar-ring" style="position: absolute; width: 112px; height: 112px; border-radius: 32px; border: 1px solid rgba(37,99,235,0.35); pointer-events: none;"></div>
+              <div class="mihouo-radar-ring-delayed" style="position: absolute; width: 112px; height: 112px; border-radius: 32px; border: 1px solid rgba(6,182,212,0.28); pointer-events: none;"></div>
+              <div class="mihouo-orbit-spin" style="position: absolute; width: 144px; height: 144px; border-radius: 50%; border: 1px dashed rgba(15,23,42,0.16); pointer-events: none;"></div>
+
+              <div style="position: relative; z-index: 20; width: 96px; height: 96px; border-radius: 28px; background: #0B0F19; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 20px 50px -10px rgba(37,99,235,0.5), 0 0 36px -6px rgba(6,182,212,0.35), inset 0 1px 0 rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center;">
+                <span class="js-live-icon-16" style="display: inline-flex; width: 52px; height: 52px;"></span>
+              </div>
+
+              <div style="position: relative; z-index: 20; margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 9999px; background: #FFFFFF; border: 1px solid rgba(15,23,42,0.12); font-size: 12.5px; font-weight: 700; box-shadow: 0 4px 12px rgba(15,23,42,0.06);">
+                  <span>MIHOUO · 觅火</span>
+                  <span style="padding: 1px 6px; border-radius: 4px; background: rgba(37,99,235,0.1); color: var(--accent-blue); font-family: var(--font-mono); font-size: 10.5px;">auto</span>
+                </div>
+                <div id="routerActiveRule" style="padding: 4px 12px; border-radius: 9999px; background: rgba(255,255,255,0.92); border: 1px solid rgba(15,23,42,0.07); font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--ink-700);">
+                  auto 路由 → Claude-2折 · 缓存读低至 $0.02/M
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: 5 Flagship Vendor Clusters -->
+            <div style="display: flex; flex-direction: column; gap: 10px; padding-left: 8px;">
+              <div style="display: flex; justify-content: space-between; padding: 0 4px 4px; font-family: var(--font-mono); font-size: 11px; font-weight: 700;">
+                <span style="color: var(--ink-500);">02 · 五大旗舰算力池</span>
+                <span style="color: var(--accent-emerald);">12 款满血模型在线</span>
+              </div>
+
+              <div class="router-node-card router-cluster-card active" data-rule="auto 路由 → Claude-2折 · 缓存读低至 $0.02/M" style="padding: 10px 16px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #EA580C;"></span>
+                    Anthropic Claude
+                    <span style="padding: 1px 7px; border-radius: 9999px; background: #F1F5F9; font-family: var(--font-mono); font-size: 10px; color: var(--ink-500);">4 款旗舰</span>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">Opus 5.5 · Sonnet 5.5 · Fable 5.1 · Haiku 5.5</div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(234,88,12,0.08); color: #EA580C; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;">官方 2 折起</span>
+                  <div style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; margin-top: 2px;">$0.095 ~ $0.80/M</div>
+                </div>
+              </div>
+
+              <div class="router-node-card router-cluster-card" data-rule="auto 路由 → GPT-0.7折 · 支持 ≤272K 阶梯计费" style="padding: 10px 16px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+                    OpenAI GPT
+                    <span style="padding: 1px 7px; border-radius: 9999px; background: #F1F5F9; font-family: var(--font-mono); font-size: 10px; color: var(--ink-500);">3 款旗舰</span>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">GPT-6 Astra · GPT-6.1 Sol · GPT-6 Luna</div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(16,185,129,0.08); color: #10B981; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;">官方 0.7 折起</span>
+                  <div style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; margin-top: 2px;">$0.095 ~ $0.70/M</div>
+                </div>
+              </div>
+
+              <div class="router-node-card router-cluster-card" data-rule="auto 路由 → DeepSeek-7.5折 · UTC 闲时自动再享 5 折" style="padding: 10px 16px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #2563EB;"></span>
+                    DeepSeek 深度求索
+                    <span style="padding: 1px 7px; border-radius: 9999px; background: #F1F5F9; font-family: var(--font-mono); font-size: 10px; color: var(--ink-500);">2 款旗舰</span>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">DeepSeek V4 Pro · DeepSeek V4.1 Flash</div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(37,99,235,0.08); color: #2563EB; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;">7.5 折 + 闲时半价</span>
+                  <div style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; margin-top: 2px;">$0.1125 ~ $0.528/M</div>
+                </div>
+              </div>
+
+              <div class="router-node-card router-cluster-card" data-rule="auto 路由 → GLM-2折 · 上下文缓存写入免费 (cc=0)" style="padding: 10px 16px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #6366F1;"></span>
+                    智谱 GLM
+                    <span style="padding: 1px 7px; border-radius: 9999px; background: #F1F5F9; font-family: var(--font-mono); font-size: 10px; color: var(--ink-500);">2 款旗舰</span>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">GLM-5.3 · GLM-5.3 Flash</div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(99,102,241,0.08); color: #6366F1; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;">2 折 · 缓存免费</span>
+                  <div style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; margin-top: 2px;">$0.075 ~ $0.28/M</div>
+                </div>
+              </div>
+
+              <div class="router-node-card router-cluster-card" data-rule="auto 路由 → Kimi-3.5折 · 双协议超长上下文分析" style="padding: 10px 16px;">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #0891B2;"></span>
+                    Moonshot Kimi
+                    <span style="padding: 1px 7px; border-radius: 9999px; background: #F1F5F9; font-family: var(--font-mono); font-size: 10px; color: var(--ink-500);">旗舰长思考</span>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-500); padding-left: 16px; margin-top: 2px;">Kimi K3.1 Pro (长上下文推理)</div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                  <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; background: rgba(8,145,178,0.08); color: #0891B2; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;">官方 3.5 折</span>
+                  <div style="font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; margin-top: 2px;">$1.05/M</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Dual-Track Infinite Model Stream -->
+          <div class="router-stream-bar">
+            <div class="router-marquee-mask">
+              <div class="router-marquee-left">
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Opus 5.5</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-opus-5-5</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-2折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$4.00</del>$0.80/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span><strong>GPT-6 Astra</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">gpt-6-astra</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GPT-0.7折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$10.00</del>$0.70/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;"></span><strong>DeepSeek V4.1 Flash</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">deepseek-flash</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">闲时 3.75 折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.15</del>$0.1125/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#6366F1;"></span><strong>GLM-5.3</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">glm-5.3</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GLM-2折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$1.40</del>$0.28/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#0891B2;"></span><strong>Kimi K3.1 Pro</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">kimi-k3</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Kimi-3.5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$3.00</del>$1.05/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Sonnet 5.5</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-sonnet-5-5</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-2折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$2.00</del>$0.40/M</span></a>
+                <!-- Duplicate for seamless loop -->
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Opus 5.5</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-opus-5-5</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-2折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$4.00</del>$0.80/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span><strong>GPT-6 Astra</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">gpt-6-astra</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GPT-0.7折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$10.00</del>$0.70/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;"></span><strong>DeepSeek V4.1 Flash</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">deepseek-flash</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">闲时 3.75 折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.15</del>$0.1125/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#6366F1;"></span><strong>GLM-5.3</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">glm-5.3</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GLM-2折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$1.40</del>$0.28/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#0891B2;"></span><strong>Kimi K3.1 Pro</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">kimi-k3</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Kimi-3.5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$3.00</del>$1.05/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Sonnet 5.5</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-sonnet-5-5</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-2折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$2.00</del>$0.40/M</span></a>
+              </div>
+
+              <div class="router-marquee-right">
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span><strong>GPT-6.1 Sol</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">gpt-6.1-sol</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GPT-1折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$2.00</del>$0.20/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;"></span><strong>DeepSeek V4 Pro</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">deepseek-v4-pro</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">闲时 4 折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.66</del>$0.528/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Fable 5.1</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-fable-5-1</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-3折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$10.00</del>$3.00/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#6366F1;"></span><strong>GLM-5.3 Flash</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">glm-5.3-flash</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GLM-5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.15</del>$0.075/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Haiku 5.5</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-haiku-5-5</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-9.5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.10</del>$0.095/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span><strong>GPT-6 Luna</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">gpt-6-luna</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GPT-9.5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.10</del>$0.095/M</span></a>
+                <!-- Duplicate for seamless loop -->
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span><strong>GPT-6.1 Sol</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">gpt-6.1-sol</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GPT-1折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$2.00</del>$0.20/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#2563EB;"></span><strong>DeepSeek V4 Pro</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">deepseek-v4-pro</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">闲时 4 折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.66</del>$0.528/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Fable 5.1</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-fable-5-1</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-3折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$10.00</del>$3.00/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#6366F1;"></span><strong>GLM-5.3 Flash</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">glm-5.3-flash</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GLM-5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.15</del>$0.075/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#EA580C;"></span><strong>Claude Haiku 5.5</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">claude-haiku-5-5</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">Claude-9.5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.10</del>$0.095/M</span></a>
+                <a href="#onboarding" class="stream-capsule"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;"></span><strong>GPT-6 Luna</strong><span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-400);">gpt-6-luna</span><span style="padding:2px 8px;border-radius:9999px;background:#F1F5F9;font-family:var(--font-mono);font-size:10.5px;font-weight:600;">GPT-9.5折</span><span style="font-family:var(--font-mono);font-size:12.5px;font-weight:700;color:var(--accent-emerald);"><del style="color:var(--ink-400);font-weight:400;font-size:10.5px;margin-right:4px;">$0.10</del>$0.095/M</span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <a href="#onboarding" class="btn-outline">查看模型调用榜单</a>
+          <a href="#onboarding" class="btn-primary">在模型广场查看全部 12 款模型与计费规则 →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ACT 04: 3-STEP QUICKSTART
+         ====================================================================== -->
+    <section class="section-block" id="onboarding">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="sec-kicker">QUICKSTART</div>
+            <h2 class="sec-title">三步完成接入，无需修改业务代码</h2>
+          </div>
+          <a href="#top" class="btn-outline">查看接入文档 →</a>
+        </div>
+
+        <div class="steps-prism-grid">
+          <!-- Step 01 -->
+          <div class="step-prism-card">
+            <div>
+              <div class="step-card-top">
+                <div class="step-index-badge">
+                  <div class="step-num-cube">01</div>
+                </div>
+                <span class="step-time-pill">默认 auto 分组</span>
+              </div>
+
+              <h3 class="step-title">创建 API 令牌</h3>
+              <p class="step-desc">
+                注册并进入控制台生成令牌。保持默认的 <code style="font-family: var(--font-mono);">auto</code> 智能分组，即可在调用不同模型时自动匹配对应的折扣分组。
+              </p>
+            </div>
+
+            <div class="step-visual-preview">
+              <div class="step-kv-row">
+                <span style="color: var(--ink-500);">令牌分组</span>
+                <span class="step-code-chip">auto (按模型自动选择)</span>
+              </div>
+              <div class="step-scope-pills">
+                <span class="step-scope-pill">Claude-2折</span>
+                <span class="step-scope-pill">GPT-0.7折</span>
+                <span class="step-scope-pill">GLM-2折</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 02 -->
+          <div class="step-prism-card">
+            <div>
+              <div class="step-card-top">
+                <div class="step-index-badge">
+                  <div class="step-num-cube">02</div>
+                </div>
+                <span class="step-time-pill">兼容官方 SDK</span>
+              </div>
+
+              <h3 class="step-title">配置接口地址或一键导入</h3>
+              <p class="step-desc">
+                在 Claude Code、Codex CLI 中将请求地址设为 <code style="font-family: var(--font-mono);">https://api.mihouo.com</code>，或在控制台一键导入至 Cherry Studio、CC Switch。
+              </p>
+            </div>
+
+            <div class="step-visual-preview">
+              <div class="step-kv-row">
+                <span style="color: var(--ink-500);">接口地址</span>
+                <span class="step-code-chip" style="color: var(--accent-blue); border-color: rgba(37,99,235,0.2); background: #EFF6FF;">
+                  https://api.mihouo.com
+                </span>
+              </div>
+              <div class="step-scope-pills">
+                <span class="step-scope-pill" style="background: #F1F5F9; color: var(--ink-700);">Anthropic 协议</span>
+                <span class="step-scope-pill" style="background: #F1F5F9; color: var(--ink-700);">OpenAI 协议</span>
+                <span class="step-scope-pill" style="background: #F1F5F9; color: var(--ink-700);">客户端一键导入</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 03 -->
+          <div class="step-prism-card">
+            <div>
+              <div class="step-card-top">
+                <div class="step-index-badge">
+                  <div class="step-num-cube">03</div>
+                </div>
+                <span class="step-time-pill">实时用量明细</span>
+              </div>
+
+              <h3 class="step-title">发起调用并查看日志明细</h3>
+              <p class="step-desc">
+                直接按模型名称发起请求，并在控制台日志中随时核对每笔调用的输入、输出、缓存命中与阶梯计费明细。
+              </p>
+            </div>
+
+            <div class="step-visual-preview">
+              <div class="step-kv-row">
+                <span style="color: var(--ink-500);">计费规则</span>
+                <span class="step-code-chip" style="color: var(--accent-emerald); border-color: rgba(5,150,105,0.2); background: #ECFDF5;">
+                  按实际 Token 实时结算
+                </span>
+              </div>
+              <div class="step-scope-pills">
+                <span class="step-scope-pill" style="background: #ECFDF5; color: var(--accent-emerald);">缓存命中减免</span>
+                <span class="step-scope-pill" style="background: #ECFDF5; color: var(--accent-emerald);">忙闲时半价</span>
+                <span class="step-scope-pill" style="background: #ECFDF5; color: var(--accent-emerald);">实时日志明细</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         ACT 05: CTA BANNER & FOOTER
+         ====================================================================== -->
+    <section class="container" style="padding-top: 20px;">
+      <div class="finale-banner">
+        <h2 class="sec-title" style="margin-bottom: 14px;">立即开始使用觅火 API 网关</h2>
+        <p style="color: var(--ink-500); max-width: 520px; margin: 0 auto 28px; font-size: 15px;">
+          注册即可创建令牌，在一个接口下统一调用 Claude、GPT、DeepSeek、GLM 与 Kimi 主力模型。
+        </p>
+        <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <a href="#top" class="btn-primary" style="padding: 13px 32px; font-size: 14px;">注册账号 →</a>
+          <a href="#models" class="btn-outline" style="padding: 13px 28px; font-size: 14px;">查看模型价格</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer-bar">
+      <div class="container footer-inner" style="justify-content: center;">
+        <span>© 2026 MIHOUO · 觅火</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================
+       FLOATING FAVICON & BRAND ICON PREVIEW SWITCHER
+       ======================================================================== -->
+  <aside class="favicon-studio" id="faviconStudio" aria-label="浏览器标签 Icon 预览">
+    <div class="studio-head">
+      <div class="studio-title">
+        <span id="studio-mini-icon" style="display: inline-flex; width: 18px; height: 18px;"></span>
+        <span>觅火 · 浏览器标签 Icon 预览</span>
+      </div>
+      <button type="button" class="studio-toggle-btn" id="studioToggleBtn">收起</button>
+    </div>
+
+    <div class="studio-body">
+      <p style="font-size: 11.5px; color: var(--ink-500); margin-top: 6px; line-height: 1.5;">
+        点击下方任意方案，可实时同步切换<strong>当前浏览器顶部真实标签页 Icon</strong> 与<strong>左上角导航栏 Logo</strong>：
+      </p>
+
+      <!-- Simulated 16x16 Light & Dark Browser Tabs -->
+      <div class="studio-tab-mock">
+        <div class="mock-browser-bar light">
+          <span style="font-size: 10px; color: #64748B; width: 42px;">浅色标签</span>
+          <div class="mock-tab-pill">
+            <span class="js-live-icon-16" style="display: inline-flex; width: 16px; height: 16px; flex-shrink: 0;"></span>
+            <span>MIHOUO · 觅火 — 统一大模型...</span>
+          </div>
+        </div>
+        <div class="mock-browser-bar dark">
+          <span style="font-size: 10px; color: #94A3B8; width: 42px;">深色标签</span>
+          <div class="mock-tab-pill">
+            <span class="js-live-icon-16" style="display: inline-flex; width: 16px; height: 16px; flex-shrink: 0;"></span>
+            <span>MIHOUO · 觅火 — 统一大模型...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Icon Concept Options -->
+      <div class="studio-options-grid" id="faviconOptionsGrid"></div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       INTERACTIVE SCRIPT
+       ======================================================================== -->
+  <script>
+    const MODELS = [
+      {
+        name: 'Claude Opus 5.5',
+        proto: 'ANTHROPIC & OPENAI 双协议',
+        badge: 'Claude-2折 · 缓存 $0.04/M',
+        ctx: 'claude-opus-5-5',
+        desc: '适合大型工程架构设计、疑难并发问题排查与复杂多步推理，支持 5m 与 1h 缓存分级计费。',
+        thinking: '● 默认路由分组：Claude-2折 (倍率 0.2)',
+        output: '输入 $0.80/M（原价 $4.00） · 输出 $4.00/M（原价 $20.00） · 缓存读取 $0.04/M',
+        cache: '$0.04/M',
+        off: '$4.00/M',
+        our: '$0.80/M',
+        accent: 'linear-gradient(90deg, #2563EB, #0891B2)',
+        color: '#2563EB',
+        savingPct: '80%',
+        glow: 'radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(8, 145, 178, 0.10) 45%, transparent 72%)'
+      },
+      {
+        name: 'GPT-6 Astra',
+        proto: 'OPENAI & ANTHROPIC 双协议',
+        badge: 'GPT-0.7折 · 缓存 $0.07/M',
+        ctx: 'gpt-6-astra',
+        desc: '支持 OpenAI Responses 接口与 Codex CLI，适合复杂算法推演、跨文件重构与架构评审。',
+        thinking: '● 默认路由分组：GPT-0.7折 (倍率 0.07)',
+        output: '≤272K 阶梯：输入 $0.70/M（原价 $10.00） · 输出 $3.50/M（原价 $50.00） · 缓存读取 $0.07/M',
+        cache: '$0.07/M',
+        off: '$10.00/M',
+        our: '$0.70/M',
+        accent: 'linear-gradient(90deg, #059669, #0891B2)',
+        color: '#059669',
+        savingPct: '93%',
+        glow: 'radial-gradient(circle, rgba(5, 150, 105, 0.16) 0%, rgba(37, 99, 235, 0.10) 45%, transparent 72%)'
+      },
+      {
+        name: 'DeepSeek V4.1 Flash',
+        proto: 'ANTHROPIC & OPENAI 双协议',
+        badge: 'DeepSeek-7.5折 + 闲时半价',
+        ctx: 'deepseek-flash',
+        desc: '响应迅速，支持 UTC 闲时自动半价，叠加 7.5 折后闲时输入仅 $0.1125/M，适合高频 Agent 循环调用。',
+        thinking: '● 默认路由分组：DeepSeek-7.5折 (倍率 0.75 · 闲时 5 折)',
+        output: '闲时输入 $0.1125/M（忙时 $0.225/M） · 闲时输出 $0.45/M · 闲时缓存读取 $0.00225/M',
+        cache: '$0.00225/M',
+        off: '$0.15/M',
+        our: '$0.1125/M',
+        accent: 'linear-gradient(90deg, #0891B2, #2563EB)',
+        color: '#0891B2',
+        savingPct: '62%',
+        glow: 'radial-gradient(circle, rgba(8, 145, 178, 0.18) 0%, rgba(37, 99, 235, 0.11) 45%, transparent 72%)'
+      },
+      {
+        name: 'GLM-5.3',
+        proto: 'ANTHROPIC & OPENAI 双协议',
+        badge: 'GLM-2折 · 缓存写入免费',
+        ctx: 'glm-5.3',
+        desc: '针对中文语境与全栈研发工作流优化，支持免费创建上下文缓存 (cc=0)，享受官方 2 折。',
+        thinking: '● 默认路由分组：GLM-2折 (倍率 0.2 · cc=0)',
+        output: '输入 $0.28/M（原价 $1.40） · 输出 $0.88/M（原价 $4.40） · 缓存读取 $0.052/M',
+        cache: '$0.052/M',
+        off: '$1.40/M',
+        our: '$0.28/M',
+        accent: 'linear-gradient(90deg, #6366F1, #2563EB)',
+        color: '#6366F1',
+        savingPct: '80%',
+        glow: 'radial-gradient(circle, rgba(99, 102, 241, 0.17) 0%, rgba(37, 99, 235, 0.10) 45%, transparent 72%)'
+      },
+      {
+        name: 'Kimi K3.1 Pro',
+        proto: 'ANTHROPIC & OPENAI 双协议',
+        badge: 'Kimi-3.5折 · 缓存 $0.105/M',
+        ctx: 'kimi-k3',
+        desc: '擅长超长技术文档阅读、跨资料综合问答与代码理解，同时支持 Anthropic 与 OpenAI 接口。',
+        thinking: '● 默认路由分组：Kimi-3.5折 (倍率 0.35)',
+        output: '输入 $1.05/M（原价 $3.00） · 输出 $5.25/M（原价 $15.00） · 缓存读取 $0.105/M',
+        cache: '$0.105/M',
+        off: '$3.00/M',
+        our: '$1.05/M',
+        accent: 'linear-gradient(90deg, #D97706, #2563EB)',
+        color: '#D97706',
+        savingPct: '65%',
+        glow: 'radial-gradient(circle, rgba(217, 119, 6, 0.15) 0%, rgba(37, 99, 235, 0.10) 45%, transparent 72%)'
+      }
+    ];
+
+    // 5-Slot Asymmetric Fan Targets (Pure 2D/2.5D translate3d + scale + rotateZ => 0% plane intersection)
+    const SLOT_TARGETS = [
+      { x: -6,  y: 12,  scale: 1.00, rot: -0.4, opacity: 1.00, z: 50 }, // Slot 0: Front Active Card
+      { x: 32,  y: -16, scale: 0.94, rot: 4.8,  opacity: 0.92, z: 40 }, // Slot 1: Upper-Right Fan
+      { x: -30, y: -22, scale: 0.89, rot: -4.5, opacity: 0.78, z: 30 }, // Slot 2: Upper-Left Fan
+      { x: 48,  y: 6,   scale: 0.84, rot: 8.5,  opacity: 0.52, z: 20 }, // Slot 3: Lower-Right Back
+      { x: -44, y: 10,  scale: 0.80, rot: -7.8, opacity: 0.34, z: 10 }  // Slot 4: Lower-Left Back
+    ];
+
+    const stackEl = document.getElementById('monolith-stack');
+    const auroraEl = document.getElementById('hero-aurora');
+    let activeIdx = 0;
+    let hoveredIdx = -1;
+
+    // Continuous spring state per card for locked 120fps GPU animation
+    const cardStates = MODELS.map((_, idx) => {
+      const t = SLOT_TARGETS[idx];
+      return {
+        el: null,
+        x: t.x, y: t.y, scale: t.scale, rot: t.rot, opacity: t.opacity,
+        vx: 0,  vy: 0,  vs: 0,          vr: 0,      vo: 0,
+        zIndex: t.z
+      };
+    });
+
+    // Build all 5 cards in DOM
+    MODELS.forEach((m, idx) => {
+      const card = document.createElement('article');
+      card.className = 'deck-card';
+      card.setAttribute('data-active', idx === 0 ? 'true' : 'false');
+      card.style.zIndex = String(cardStates[idx].zIndex);
+      card.innerHTML = `
+        <div class="deck-card-accent" style="background: ${m.accent};"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: ${m.color}; white-space: nowrap;">
+            ${m.proto}
+          </span>
+          <span style="padding: 3px 10px; border-radius: 999px; background: #ECFDF5; color: #059669; font-size: 11.5px; font-weight: 600; white-space: nowrap;">
+            ${m.badge}
+          </span>
+        </div>
+
+        <div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; gap: 8px;">
+            <div style="font-size: 23px; font-weight: 700; letter-spacing: -0.025em; color: var(--ink-950);">${m.name}</div>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-400);">${m.ctx}</span>
+          </div>
+          <p style="font-size: 12.8px; color: var(--ink-500); line-height: 1.58;">
+            ${m.desc}
+          </p>
+        </div>
+
+        <div class="monolith-stream-box">
+          <div class="monolith-thinking" style="color: ${m.color};">
+            ${m.thinking}
+          </div>
+          <div style="font-size: 12px; color: var(--ink-700); margin-bottom: 8px;">
+            ${m.output}
+          </div>
+          <div style="height: 4px; background: #E2E8F0; border-radius: 999px; overflow: hidden;">
+            <div class="card-rate-bar-fill" style="width: ${m.savingPct}; background: ${m.accent};"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); padding-top: 13px; border-top: 1px solid rgba(15,23,42,0.07);">
+          <div>
+            <div style="font-size: 11px; color: var(--ink-500);">缓存读取折后</div>
+            <div style="font-size: 16.5px; font-weight: 700; color: var(--accent-emerald); margin-top: 2px;">${m.cache}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--ink-500);">官方输入原价</div>
+            <div style="font-size: 16.5px; font-weight: 500; color: var(--ink-400); text-decoration: line-through; margin-top: 2px;">${m.off}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; color: var(--ink-500);">平台折后输入</div>
+            <div style="font-size: 17px; font-weight: 700; color: ${m.color}; margin-top: 2px;">${m.our}</div>
+          </div>
+        </div>
+      `;
+
+      card.addEventListener('pointerenter', () => { hoveredIdx = idx; });
+      card.addEventListener('pointerleave', () => { if (hoveredIdx === idx) hoveredIdx = -1; });
+      card.addEventListener('click', () => {
+        if (idx !== activeIdx) switchToCard(idx);
+      });
+
+      cardStates[idx].el = card;
+      stackEl.appendChild(card);
+    });
+
+    function switchToCard(nextIdx) {
+      const total = MODELS.length;
+      nextIdx = ((nextIdx % total) + total) % total;
+      if (nextIdx === activeIdx) return;
+
+      const prevIdx = activeIdx;
+      activeIdx = nextIdx;
+
+      // Sync left model chips
+      document.querySelectorAll('[data-model]').forEach((btn) => {
+        btn.classList.toggle('active', Number(btn.getAttribute('data-model')) === activeIdx);
+      });
+
+      auroraEl.style.background = MODELS[activeIdx].glow;
+
+      // Inject physical arc-shuffle velocity impulses so outgoing & incoming cards arc around each other smoothly
+      const outState = cardStates[prevIdx];
+      outState.vx = -680;
+      outState.vy = -150;
+      outState.vr = -42;
+      outState.vs = -0.35;
+
+      const inState = cardStates[activeIdx];
+      inState.vx = 520;
+      inState.vy = -180;
+      inState.vr = 34;
+      inState.vs = 0.45;
+      // Immediately promote incoming card to top layer so it never clips through any card
+      inState.zIndex = 60;
+      inState.el.style.zIndex = '60';
+
+      // Update active attributes & schedule clean z-index settling after outgoing card clears the edge
+      cardStates.forEach((st, i) => {
+        st.el.setAttribute('data-active', i === activeIdx ? 'true' : 'false');
+        const newSlot = (i - activeIdx + total) % total;
+        if (i !== prevIdx && i !== activeIdx) {
+          st.zIndex = SLOT_TARGETS[newSlot].z;
+          st.el.style.zIndex = String(st.zIndex);
+        }
+      });
+
+      setTimeout(() => {
+        cardStates.forEach((st, i) => {
+          const slot = (i - activeIdx + total) % total;
+          st.zIndex = SLOT_TARGETS[slot].z;
+          st.el.style.zIndex = String(st.zIndex);
+        });
+      }, 150);
+    }
+
+    // 1. Left Model Chips Switcher
+    document.querySelectorAll('[data-model]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        switchToCard(Number(btn.getAttribute('data-model')));
+      });
+    });
+
+    // 2. Smart Router Cluster Switcher (auto-cycles & hover-locks)
+    const clusterCards = Array.from(document.querySelectorAll('.router-cluster-card'));
+    const routerActiveRuleEl = document.getElementById('routerActiveRule');
+    let activeClusterIdx = 0;
+    let routerPaused = false;
+
+    function setActiveCluster(idx) {
+      if (!clusterCards.length) return;
+      activeClusterIdx = ((idx % clusterCards.length) + clusterCards.length) % clusterCards.length;
+      clusterCards.forEach((c, i) => c.classList.toggle('active', i === activeClusterIdx));
+      if (routerActiveRuleEl) {
+        routerActiveRuleEl.textContent = clusterCards[activeClusterIdx].getAttribute('data-rule') || '';
+      }
+    }
+
+    clusterCards.forEach((card, idx) => {
+      card.addEventListener('mouseenter', () => {
+        routerPaused = true;
+        setActiveCluster(idx);
+      });
+      card.addEventListener('mouseleave', () => {
+        routerPaused = false;
+      });
+    });
+
+    setInterval(() => {
+      if (!routerPaused) {
+        setActiveCluster(activeClusterIdx + 1);
+      }
+    }, 2800);
+
+    // 3. Unified 120fps Spring Physics Loop (Zero Layout/Blur, Pure GPU Transform + Opacity)
+    let ptrX = 0, ptrY = 0;
+    window.addEventListener('pointermove', (e) => {
+      ptrX = (e.clientX / window.innerWidth - 0.5) * 2;
+      ptrY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    let lastTime = performance.now();
+    function stepSpringPhysics(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.032);
+      lastTime = now;
+
+      const stiffness = 175;
+      const damping = 21;
+      const total = MODELS.length;
+
+      for (let i = 0; i < total; i++) {
+        const st = cardStates[i];
+        const slot = (i - activeIdx + total) % total;
+        const base = SLOT_TARGETS[slot];
+
+        // Subtle hover peek when hovering a background card
+        let hoverNudgeX = 0;
+        let hoverNudgeY = 0;
+        let hoverRot = 0;
+        if (i === hoveredIdx && slot !== 0) {
+          hoverNudgeX = base.x > 0 ? 12 : -12;
+          hoverNudgeY = -10;
+          hoverRot = base.rot > 0 ? 1.5 : -1.5;
+        }
+
+        // Subtle cursor parallax per depth layer
+        const depthFactor = slot === 0 ? 1 : (5 - slot) * 0.25;
+        const tx = base.x + hoverNudgeX + ptrX * 6 * depthFactor;
+        const ty = base.y + hoverNudgeY + ptrY * 4 * depthFactor;
+        const ts = base.scale;
+        const tr = base.rot + hoverRot;
+        const to = base.opacity;
+
+        // Spring integration (F = -k*x - c*v)
+        st.vx += ((tx - st.x) * stiffness - st.vx * damping) * dt;
+        st.vy += ((ty - st.y) * stiffness - st.vy * damping) * dt;
+        st.vs += ((ts - st.scale) * stiffness - st.vs * damping) * dt;
+        st.vr += ((tr - st.rot) * stiffness - st.vr * damping) * dt;
+        st.vo += ((to - st.opacity) * stiffness - st.vo * damping) * dt;
+
+        st.x += st.vx * dt;
+        st.y += st.vy * dt;
+        st.scale += st.vs * dt;
+        st.rot += st.vr * dt;
+        st.opacity = Math.max(0, Math.min(1, st.opacity + st.vo * dt));
+
+        st.el.style.transform = `translate3d(${st.x.toFixed(2)}px, ${st.y.toFixed(2)}px, 0) scale(${st.scale.toFixed(4)}) rotate(${st.rot.toFixed(2)}deg)`;
+        st.el.style.opacity = st.opacity.toFixed(3);
+      }
+
+      requestAnimationFrame(stepSpringPhysics);
+    }
+
+    requestAnimationFrame(stepSpringPhysics);
+
+    // 4. Live Browser Favicon & Brand Icon Studio
+    const FAVICON_DESIGNS = [
+      {
+        id: 'prism-spark',
+        name: '方案 01 · 棱光寻火',
+        sub: '电光蓝焰 + 星芒火芯',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none">
+          <defs>
+            <linearGradient id="p1_bg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#0F172A"/>
+              <stop offset="100%" stop-color="#090D16"/>
+            </linearGradient>
+            <linearGradient id="p1_main" x1="18" y1="52" x2="45" y2="10" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#1D4ED8"/>
+              <stop offset="52%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#38BDF8"/>
+            </linearGradient>
+            <linearGradient id="p1_wing" x1="16" y1="48" x2="34" y2="20" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#3B82F6"/>
+              <stop offset="100%" stop-color="#67E8F9"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#p1_bg)" stroke="#334155" stroke-width="1.5" stroke-opacity="0.6"/>
+          <path d="M34.5 9.5C34.5 9.5 49 22.8 49 36.8C49 46.8 41.4 54 32 54C22.6 54 15 46.8 15 36.8C15 28.6 20.2 21.8 25.5 17.5C24.8 22.8 27.2 26.5 30.8 27.8C28.4 20.8 30.8 14.2 34.5 9.5Z" fill="url(#p1_main)"/>
+          <path d="M25.5 17.5C20.2 21.8 15 28.6 15 36.8C15 44.5 20.1 50.8 27.2 53.1C22.8 49.2 21.2 42.5 23.8 35.8C25.6 31.2 28.6 28.8 30.8 27.8C27.2 26.5 24.8 22.8 25.5 17.5Z" fill="url(#p1_wing)" opacity="0.88"/>
+          <path d="M32 27.5C33.4 33.8 35.2 35.6 41.5 37C35.2 38.4 33.4 40.2 32 46.5C30.6 40.2 28.8 38.4 22.5 37C28.8 35.6 30.6 33.8 32 27.5Z" fill="#FFFFFF"/>
+        </svg>`
+      },
+      {
+        id: 'ember-cobalt',
+        name: '方案 02 · 破晓真火',
+        sub: '冷暖撞色 · 极高辨识度',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none">
+          <defs>
+            <linearGradient id="p2_bg" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#111827"/>
+              <stop offset="100%" stop-color="#090D16"/>
+            </linearGradient>
+            <linearGradient id="p2_blue" x1="15" y1="52" x2="46" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#38BDF8"/>
+            </linearGradient>
+            <linearGradient id="p2_amber" x1="28" y1="38" x2="39" y2="10" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#F97316"/>
+              <stop offset="65%" stop-color="#FBBF24"/>
+              <stop offset="100%" stop-color="#FEF08A"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#p2_bg)" stroke="#334155" stroke-width="1.5" stroke-opacity="0.6"/>
+          <path d="M27.5 15.5C19.5 23.2 15 30.8 15 38.2C15 47.2 22.5 54 32 54C41.5 54 49 47.2 49 38.2C49 32.8 46.2 27.6 41.8 23.5C42.8 31.2 38.2 37.2 31.8 37.2C25.8 37.2 23.6 31.4 25.8 24.4C26.5 21.8 27.1 18.8 27.5 15.5Z" fill="url(#p2_blue)"/>
+          <path d="M35.5 9.5C41.8 16.5 44.2 23.8 41.8 30.2C39.8 35.4 34.8 37.8 31.2 35.8C27.8 34 27.2 28.8 29.8 23.2C32 18.5 34.2 14.2 35.5 9.5Z" fill="url(#p2_amber)"/>
+          <circle cx="33.5" cy="30" r="2.6" fill="#FFFFFF"/>
+        </svg>`
+      },
+      {
+        id: 'monogram-torch',
+        name: '方案 03 · M 焰徽章',
+        sub: '字母 M + 几何火种',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none">
+          <defs>
+            <linearGradient id="p3_bg" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#1D4ED8"/>
+              <stop offset="55%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#0EA5E9"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#p3_bg)"/>
+          <path d="M15 47V23.5C15 22.2 16.6 21.5 17.5 22.4L26 31V47H15Z" fill="#FFFFFF" fill-opacity="0.92"/>
+          <path d="M49 47V23.5C49 22.2 47.4 21.5 46.5 22.4L38 31V47H49Z" fill="#FFFFFF" fill-opacity="0.92"/>
+          <path d="M32 12C32 12 40.5 21.5 40.5 29.8C40.5 35.2 36.7 39.2 32 39.2C27.3 39.2 23.5 35.2 23.5 29.8C23.5 21.5 32 12 32 12Z" fill="#FFFFFF"/>
+          <path d="M32 23.5C33 27.6 34.2 28.8 38.2 29.8C34.2 30.8 33 32 32 36C31 32 29.8 30.8 25.8 29.8C29.8 28.8 31 27.6 32 23.5Z" fill="#2563EB"/>
+        </svg>`
+      },
+      {
+        id: 'pure-glyph',
+        name: '方案 04 · 无框纯焰',
+        sub: '透明底自适应浅深色',
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%" fill="none">
+          <defs>
+            <linearGradient id="p4_main" x1="16" y1="56" x2="48" y2="8" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#1E40AF"/>
+              <stop offset="50%" stop-color="#2563EB"/>
+              <stop offset="100%" stop-color="#06B6D4"/>
+            </linearGradient>
+            <linearGradient id="p4_wing" x1="12" y1="50" x2="34" y2="16" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#3B82F6"/>
+              <stop offset="100%" stop-color="#38BDF8"/>
+            </linearGradient>
+          </defs>
+          <path d="M35.5 6C35.5 6 53 21.8 53 38.2C53 50.2 43.6 58 32 58C20.4 58 11 50.2 11 38.2C11 28.5 17.2 20.5 23.8 15.4C22.8 21.6 25.8 26 30.2 27.6C27.4 19.4 30.5 11.5 35.5 6Z" fill="url(#p4_main)"/>
+          <path d="M23.8 15.4C17.2 20.5 11 28.5 11 38.2C11 47.2 17.2 54.5 26 57.2C20.6 52.6 18.8 44.8 21.8 36.8C24 31.4 27.6 28.8 30.2 27.6C25.8 26 22.8 21.6 23.8 15.4Z" fill="url(#p4_wing)" opacity="0.9"/>
+          <path d="M32 27C33.7 34.4 35.8 36.5 43.2 38.2C35.8 39.9 33.7 42 32 49.4C30.3 42 28.2 39.9 20.8 38.2C28.2 36.5 30.3 34.4 32 27Z" fill="#FFFFFF"/>
+        </svg>`
+      }
+    ];
+
+    const faviconLink = document.getElementById('site-favicon');
+    const headerBrandIcon = document.getElementById('header-brand-icon');
+    const studioMiniIcon = document.getElementById('studio-mini-icon');
+    const faviconOptionsGrid = document.getElementById('faviconOptionsGrid');
+    const studioEl = document.getElementById('faviconStudio');
+    const studioToggleBtn = document.getElementById('studioToggleBtn');
+
+    function applyFaviconDesign(index) {
+      const item = FAVICON_DESIGNS[index];
+      if (!item) return;
+
+      // 1. Update browser tab <link rel="icon">
+      const encoded = 'data:image/svg+xml,' + encodeURIComponent(item.svg.replace(/\s+/g, ' ').trim());
+      if (faviconLink) {
+        faviconLink.setAttribute('href', encoded);
+      }
+
+      // 2. Update Header Logo & Studio preview icons
+      if (headerBrandIcon) headerBrandIcon.innerHTML = item.svg;
+      if (studioMiniIcon) studioMiniIcon.innerHTML = item.svg;
+      document.querySelectorAll('.js-live-icon-16').forEach((el) => {
+        el.innerHTML = item.svg;
+      });
+
+      // 3. Highlight active option button
+      document.querySelectorAll('.studio-opt-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx === index);
+      });
+    }
+
+    if (faviconOptionsGrid) {
+      FAVICON_DESIGNS.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'studio-opt-btn' + (idx === 0 ? ' active' : '');
+        btn.innerHTML = `
+          <span style="display: inline-flex; width: 32px; height: 32px; flex-shrink: 0;">${item.svg}</span>
+          <div>
+            <div class="studio-opt-name">${item.name}</div>
+            <div class="studio-opt-sub">${item.sub}</div>
+          </div>
+        `;
+        btn.addEventListener('click', () => applyFaviconDesign(idx));
+        faviconOptionsGrid.appendChild(btn);
+      });
+      applyFaviconDesign(0);
+    }
+
+    if (studioToggleBtn && studioEl) {
+      studioToggleBtn.addEventListener('click', () => {
+        const collapsed = studioEl.classList.toggle('collapsed');
+        studioToggleBtn.textContent = collapsed ? '展开 Icon 方案' : '收起';
+      });
+    }
+  </script>
+</body>
+</html>

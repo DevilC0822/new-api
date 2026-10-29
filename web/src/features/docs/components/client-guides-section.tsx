@@ -16,9 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
-import { Check, CheckCircle2, Copy, Terminal } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { cn } from '@/lib/utils'
@@ -27,28 +27,24 @@ import { DOCS_CLIENT_GUIDES } from '../constants'
 
 interface ClientGuidesSectionProps {
   gatewayOrigin: string
-  visible: boolean
 }
 
 export function ClientGuidesSection(props: ClientGuidesSectionProps) {
+  const { t } = useTranslation()
   const { copyToClipboard } = useCopyToClipboard()
   const [activeClientId, setActiveClientId] = useState<string>('claude-code')
   const [configTab, setConfigTab] = useState<'env' | 'config'>('env')
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
-
-  if (!props.visible) {
-    return null
-  }
 
   const activeClient =
     DOCS_CLIENT_GUIDES.find((c) => c.id === activeClientId) ??
     DOCS_CLIENT_GUIDES[0]
 
   const clientBaseUrl = `${props.gatewayOrigin}${activeClient.baseUrlSuffix}`
-  const envCode = activeClient.buildEnvCode(props.gatewayOrigin)
-  const configCode = activeClient.buildConfigCode(props.gatewayOrigin)
-  const verifyCode = activeClient.buildVerifyCode(props.gatewayOrigin)
-  const activeConfigCode = configTab === 'env' ? envCode : configCode
+  const activeConfigCode =
+    configTab === 'env'
+      ? activeClient.buildEnvCode(props.gatewayOrigin)
+      : activeClient.buildConfigCode(props.gatewayOrigin)
   const activeConfigTitle =
     configTab === 'env' ? activeClient.envTitle : activeClient.configTitle
 
@@ -63,292 +59,145 @@ export function ClientGuidesSection(props: ClientGuidesSectionProps) {
   return (
     <section
       id='client-workbench'
-      className='bg-card scroll-mt-24 overflow-hidden rounded-[22px] border border-white shadow-[0_22px_48px_-14px_rgba(20,20,18,0.06)] dark:border-white/10'
+      className='scroll-mt-24 rounded-[24px] border border-[#0F172A]/[0.08] bg-white p-6 shadow-[0_14px_34px_-18px_rgba(15,23,42,0.05)] md:p-8 dark:border-white/10 dark:bg-zinc-900'
     >
-      {/* Top Section Header */}
-      <div className='border-border/80 flex flex-wrap items-baseline justify-between gap-2 border-b px-6 py-5 md:px-8'>
-        <div className='flex items-baseline gap-2.5'>
-          <span className='text-muted-foreground font-serif text-lg tabular-nums'>
-            04
-          </span>
-          <h2 className='font-serif text-xl font-normal tracking-tight md:text-2xl'>
-            客户端与 IDE 深度接入指南
-          </h2>
-        </div>
-        <span className='text-muted-foreground font-mono text-[11px]'>
-          CLIENT &amp; IDE INTEGRATION WORKBENCH
+      {/* Section Header */}
+      <div className='flex items-baseline gap-2.5 border-b border-[#0F172A]/[0.07] pb-4 dark:border-white/10'>
+        <span className='rounded-md bg-blue-600/10 px-2 py-0.5 font-mono text-[12px] font-bold text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'>
+          02
         </span>
+        <h2 className='text-[20px] font-bold tracking-[-0.02em] text-[#0F172A] md:text-[22px] dark:text-white'>
+          {t('Client Configuration')}
+        </h2>
       </div>
 
-      {/* Split Client Selector + 3-Step Configuration Workbench */}
-      <div className='grid grid-cols-1 md:grid-cols-12'>
-        {/* Left: Client Switcher Column (4 cols) */}
-        <div className='border-border flex flex-col justify-between border-b bg-[#F8F7F3] p-5 md:col-span-4 md:border-r md:border-b-0 dark:bg-zinc-900/65'>
-          <div>
-            <div className='border-border/80 mb-3 flex items-center justify-between border-b pb-2.5'>
-              <div className='flex items-center gap-2'>
-                <Terminal className='text-foreground size-3.5' />
-                <span className='text-foreground text-xs font-semibold tracking-[0.06em]'>
-                  选择开发工具
-                </span>
-              </div>
-              <span className='text-muted-foreground font-mono text-[10.5px]'>
-                6 款主流客户端
-              </span>
-            </div>
-
-            <div
-              className='space-y-1.5'
-              role='tablist'
-              aria-label='客户端配置切换列表'
+      {/* Horizontal Client Tabs */}
+      <div
+        className='mt-5 flex flex-wrap gap-2'
+        role='tablist'
+        aria-label={t('Client configuration list')}
+      >
+        {DOCS_CLIENT_GUIDES.map((client) => {
+          const isSelected = client.id === activeClient.id
+          return (
+            <button
+              key={client.id}
+              type='button'
+              role='tab'
+              aria-selected={isSelected}
+              onClick={() => setActiveClientId(client.id)}
+              className={cn(
+                'inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-[13px] font-bold transition-all',
+                isSelected
+                  ? 'border-blue-600/35 bg-blue-600/[0.06] text-blue-600 shadow-2xs dark:border-blue-400/40 dark:bg-blue-500/15 dark:text-blue-400'
+                  : 'border-[#0F172A]/[0.08] bg-[#F8FAFC] text-[#475569] hover:border-[#0F172A]/15 hover:text-[#0F172A] dark:border-white/10 dark:bg-zinc-950/60 dark:text-zinc-400 dark:hover:text-white'
+              )}
             >
-              {DOCS_CLIENT_GUIDES.map((client) => {
-                const isSelected = client.id === activeClient.id
-                return (
-                  <button
-                    key={client.id}
-                    type='button'
-                    role='tab'
-                    aria-selected={isSelected}
-                    onClick={() => setActiveClientId(client.id)}
-                    className={cn(
-                      'flex w-full flex-col rounded-[13px] border px-3.5 py-2.5 text-left transition-all duration-150',
-                      isSelected
-                        ? 'border-white bg-white text-[#141413] shadow-[0_8px_20px_-6px_rgba(20,20,18,0.08)] dark:border-white/20 dark:bg-zinc-800 dark:text-white'
-                        : 'border-transparent bg-transparent text-[#52524E] hover:border-black/5 hover:bg-white/60 hover:text-[#141413] dark:text-zinc-400 dark:hover:bg-zinc-800/40 dark:hover:text-zinc-100'
-                    )}
-                  >
-                    <div className='flex w-full items-center justify-between gap-2'>
-                      <span className='text-[13px] font-semibold tracking-tight'>
-                        {client.name}
-                      </span>
-                      <span
-                        className={cn(
-                          'rounded-full px-2 py-0.5 font-mono text-[10px]',
-                          isSelected
-                            ? 'bg-[#141413] text-white dark:bg-white dark:text-[#141413]'
-                            : 'bg-black/[0.04] text-[#71717A] dark:bg-white/10 dark:text-zinc-400'
-                        )}
-                      >
-                        {client.tag}
-                      </span>
-                    </div>
-                    <span className='text-muted-foreground mt-0.5 line-clamp-1 text-[11px]'>
-                      {client.subtitle}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+              <span>{client.name}</span>
+              <span
+                className={cn(
+                  'rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold',
+                  isSelected
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-[#E2E8F0]/80 text-[#64748B] dark:bg-zinc-800 dark:text-zinc-400'
+                )}
+              >
+                {t(client.tag)}
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
-          {/* Client Key Highlights Box */}
-          <div className='border-border/80 bg-card mt-5 rounded-[14px] border p-3.5'>
-            <div className='text-foreground mb-2 text-[11.5px] font-semibold'>
-              核心适配特性
-            </div>
-            <ul className='space-y-1.5'>
-              {activeClient.highlights.map((item) => (
-                <li
-                  key={item}
-                  className='text-muted-foreground flex items-start gap-1.5 text-[11px] leading-[1.5]'
-                >
-                  <CheckCircle2 className='text-success mt-0.5 size-3 shrink-0' />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Compact Client Summary Strip */}
+      <div className='mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[#0F172A]/[0.07] bg-[#F8FAFC] px-4 py-3 dark:border-white/10 dark:bg-zinc-950/60'>
+        <div className='min-w-0 space-y-0.5'>
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='text-[12px] font-semibold text-[#64748B] dark:text-zinc-400'>
+              {t('Endpoint URL')}:
+            </span>
+            <code className='font-mono text-[12.5px] font-bold text-[#0F172A] dark:text-white'>
+              {clientBaseUrl}
+            </code>
+            <button
+              type='button'
+              onClick={() => handleCopy('client-baseurl', clientBaseUrl)}
+              className='inline-flex items-center gap-1 rounded border border-[#0F172A]/10 bg-white px-2 py-0.5 font-mono text-[10.5px] font-semibold text-[#334155] transition-colors hover:bg-[#0F172A] hover:text-white dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-white dark:hover:text-[#0F172A]'
+            >
+              {copiedKey === 'client-baseurl' ? (
+                <>
+                  <Check className='size-2.5 text-emerald-500' />
+                  <span>{t('Copied')}</span>
+                </>
+              ) : (
+                <>
+                  <Copy className='size-2.5' />
+                  <span>{t('Copy URL')}</span>
+                </>
+              )}
+            </button>
           </div>
+          <p className='text-[12px] text-[#64748B] dark:text-zinc-400'>
+            {t(activeClient.baseUrlNote)}
+          </p>
         </div>
 
-        {/* Right: Active Client Configuration Steps (8 cols) */}
-        <div className='flex min-w-0 flex-col justify-between p-6 md:col-span-8 md:p-7'>
-          <div>
-            {/* Client Title & Protocol Badge */}
-            <div className='border-border/80 flex flex-wrap items-start justify-between gap-3 border-b pb-4'>
-              <div>
-                <h3 className='text-foreground font-serif text-xl font-normal tracking-tight'>
-                  配置 {activeClient.name}
-                </h3>
-                <p className='text-muted-foreground mt-1 text-[12.5px]'>
-                  {activeClient.subtitle}
-                </p>
-              </div>
-              <div className='flex flex-col items-start gap-1 sm:items-end'>
-                <span className='border-border bg-background text-foreground rounded-full border px-3 py-0.5 font-mono text-[11px] font-medium'>
-                  {activeClient.protocol}
-                </span>
-                <span className='text-muted-foreground font-mono text-[11px]'>
-                  推荐模型：{activeClient.recommendedModel}
-                </span>
-              </div>
-            </div>
-
-            {/* Step 1: Base URL */}
-            <div className='mt-5'>
-              <div className='mb-2 flex items-center justify-between gap-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='bg-foreground text-background inline-flex size-5 items-center justify-center rounded-full font-mono text-[10.5px] font-semibold'>
-                    01
-                  </span>
-                  <span className='text-foreground text-[13.5px] font-semibold'>
-                    确认客户端专属 Base URL
-                  </span>
-                </div>
-                <span className='text-muted-foreground font-mono text-[11px]'>
-                  {activeClient.authHeader}
-                </span>
-              </div>
-
-              <div className='border-border flex flex-col justify-between gap-3 rounded-[13px] border bg-[#F8F7F3] px-4 py-3 sm:flex-row sm:items-center dark:bg-zinc-900/60'>
-                <div className='min-w-0'>
-                  <div className='text-muted-foreground text-[11px]'>
-                    {activeClient.name} Base URL
-                  </div>
-                  <code className='text-foreground mt-0.5 block truncate font-mono text-[13px] font-semibold'>
-                    {clientBaseUrl}
-                  </code>
-                </div>
-                <button
-                  type='button'
-                  onClick={() => handleCopy('client-baseurl', clientBaseUrl)}
-                  className='border-border bg-card text-foreground hover:bg-foreground hover:text-background inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border px-3.5 py-1.5 font-mono text-[11px] font-medium transition-colors sm:self-center'
-                >
-                  {copiedKey === 'client-baseurl' ? (
-                    <>
-                      <Check className='size-3.5' />
-                      <span>已复制 Base URL</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className='size-3.5' />
-                      <span>复制 Base URL</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              <p className='text-muted-foreground mt-1.5 text-[12px] leading-[1.6]'>
-                {activeClient.baseUrlNote}
-              </p>
-            </div>
-
-            {/* Step 2: Env / Config File Toggle */}
-            <div className='mt-5'>
-              <div className='mb-2 flex flex-wrap items-center justify-between gap-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='bg-foreground text-background inline-flex size-5 items-center justify-center rounded-full font-mono text-[10.5px] font-semibold'>
-                    02
-                  </span>
-                  <span className='text-foreground text-[13.5px] font-semibold'>
-                    写入环境变量或持久化配置文件
-                  </span>
-                </div>
-
-                <div className='border-border inline-flex rounded-full border bg-[#F6F5F0] p-0.5 dark:bg-zinc-800'>
-                  <button
-                    type='button'
-                    onClick={() => setConfigTab('env')}
-                    className={cn(
-                      'rounded-full px-3 py-1 text-[11px] font-medium transition-all',
-                      configTab === 'env'
-                        ? 'bg-white text-[#141413] shadow-xs dark:bg-zinc-900 dark:text-white'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    方式 A · 环境变量
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => setConfigTab('config')}
-                    className={cn(
-                      'rounded-full px-3 py-1 text-[11px] font-medium transition-all',
-                      configTab === 'config'
-                        ? 'bg-white text-[#141413] shadow-xs dark:bg-zinc-900 dark:text-white'
-                        : 'text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    方式 B · 配置文件
-                  </button>
-                </div>
-              </div>
-
-              <div className='border-border overflow-hidden rounded-[14px] border bg-[#161615] text-[#F4F3EE]'>
-                <div className='flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-4 py-2'>
-                  <span className='font-mono text-[11px] text-zinc-400'>
-                    {activeConfigTitle}
-                  </span>
-                  <button
-                    type='button'
-                    onClick={() =>
-                      handleCopy('client-config', activeConfigCode)
-                    }
-                    className='inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 font-mono text-[11px] text-zinc-200 transition-colors hover:bg-white/15'
-                  >
-                    {copiedKey === 'client-config' ? (
-                      <>
-                        <Check className='size-3' />
-                        <span>已复制</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className='size-3' />
-                        <span>复制配置</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <pre className='overflow-x-auto p-4 font-mono text-[12px] leading-[1.68] text-zinc-100'>
-                  <code>{activeConfigCode}</code>
-                </pre>
-              </div>
-            </div>
-
-            {/* Step 3: Verification cURL */}
-            <div className='mt-5'>
-              <div className='mb-2 flex items-center justify-between gap-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='bg-foreground text-background inline-flex size-5 items-center justify-center rounded-full font-mono text-[10.5px] font-semibold'>
-                    03
-                  </span>
-                  <span className='text-foreground text-[13.5px] font-semibold'>
-                    {activeClient.verifyTitle}
-                  </span>
-                </div>
-                <span className='text-muted-foreground font-mono text-[11px]'>
-                  返回 HTTP 200 即配置完成
-                </span>
-              </div>
-
-              <div className='border-border overflow-hidden rounded-[13px] border bg-[#F8F7F3] dark:bg-zinc-900/60'>
-                <div className='border-border/70 flex items-center justify-between border-b px-4 py-2'>
-                  <span className='text-muted-foreground font-mono text-[11px]'>
-                    终端一键测试命令
-                  </span>
-                  <button
-                    type='button'
-                    onClick={() => handleCopy('client-verify', verifyCode)}
-                    className='text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-[11px] transition-colors'
-                  >
-                    {copiedKey === 'client-verify' ? (
-                      <>
-                        <Check className='size-3' />
-                        <span>已复制</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className='size-3' />
-                        <span>复制 cURL</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <pre className='text-foreground overflow-x-auto p-4 font-mono text-[11.5px] leading-[1.65]'>
-                  <code>{verifyCode}</code>
-                </pre>
-              </div>
-            </div>
-          </div>
+        {/* Env vs Config File Switcher */}
+        <div className='inline-flex shrink-0 rounded-lg border border-[#0F172A]/[0.08] bg-white p-0.5 dark:border-white/10 dark:bg-zinc-900'>
+          <button
+            type='button'
+            onClick={() => setConfigTab('env')}
+            className={cn(
+              'rounded-md px-3 py-1 text-[11.5px] font-semibold transition-all',
+              configTab === 'env'
+                ? 'bg-[#0F172A] text-white dark:bg-white dark:text-[#0F172A]'
+                : 'text-[#64748B] hover:text-[#0F172A] dark:text-zinc-400 dark:hover:text-white'
+            )}
+          >
+            {t('Environment Variables')}
+          </button>
+          <button
+            type='button'
+            onClick={() => setConfigTab('config')}
+            className={cn(
+              'rounded-md px-3 py-1 text-[11.5px] font-semibold transition-all',
+              configTab === 'config'
+                ? 'bg-[#0F172A] text-white dark:bg-white dark:text-[#0F172A]'
+                : 'text-[#64748B] hover:text-[#0F172A] dark:text-zinc-400 dark:hover:text-white'
+            )}
+          >
+            {t('Config File')}
+          </button>
         </div>
+      </div>
+
+      {/* Single Clean Config Code Panel */}
+      <div className='mt-3 overflow-hidden rounded-[16px] border border-[#0F172A]/[0.08] bg-[#F8FAFC] dark:border-white/10 dark:bg-zinc-950'>
+        <div className='flex items-center justify-between border-b border-[#0F172A]/[0.07] bg-white px-4 py-2.5 dark:border-white/10 dark:bg-zinc-900'>
+          <span className='font-mono text-[11.5px] font-semibold text-[#475569] dark:text-zinc-300'>
+            {t(activeConfigTitle)}
+          </span>
+          <button
+            type='button'
+            onClick={() => handleCopy('client-config', activeConfigCode)}
+            className='inline-flex items-center gap-1 rounded-md border border-[#0F172A]/10 bg-[#F8FAFC] px-2.5 py-1 font-mono text-[11px] font-semibold text-[#0F172A] transition-colors hover:bg-[#0F172A] hover:text-white dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-white dark:hover:text-[#0F172A]'
+          >
+            {copiedKey === 'client-config' ? (
+              <>
+                <Check className='size-3 text-emerald-500' />
+                <span>{t('Copied')}</span>
+              </>
+            ) : (
+              <>
+                <Copy className='size-3' />
+                <span>{t('Copy Config')}</span>
+              </>
+            )}
+          </button>
+        </div>
+        <pre className='overflow-x-auto p-4 font-mono text-[12px] leading-[1.68] text-[#1E293B] dark:text-sky-200'>
+          <code>{activeConfigCode}</code>
+        </pre>
       </div>
     </section>
   )

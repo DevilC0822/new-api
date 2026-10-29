@@ -271,7 +271,7 @@ func withSMTPSettings(t *testing.T) {
 
 func TestRenderEmailWrapsContentInBrandedShell(t *testing.T) {
 	withSMTPSettings(t)
-	SystemName = "MIHOUO · 弥火"
+	SystemName = "MIHOUO · 觅火"
 
 	doc := RenderEmail(EmailLayout{
 		Preheader: "preview <text>",

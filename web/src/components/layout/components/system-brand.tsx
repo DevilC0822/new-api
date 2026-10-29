@@ -49,7 +49,9 @@ export function SystemBrand(props: SystemBrandProps) {
   const variant = props.variant ?? 'sidebar'
   const rawName =
     status?.system_name || props.defaultName || DEFAULT_SYSTEM_NAME
-  const name = rawName === 'New API' ? DEFAULT_SYSTEM_NAME : rawName
+  const name = (
+    rawName === 'New API' ? DEFAULT_SYSTEM_NAME : rawName
+  ).replaceAll('弥火', '觅火')
   const version = status?.version || props.defaultVersion || 'api.mihouo.com'
   const isDefaultLogo = !logo || logo === DEFAULT_LOGO
 

@@ -107,7 +107,7 @@ For commercial licensing, please contact support@quantumnous.com
     scrollbar-color: var(--border) transparent;
   }
   html {
-    @apply overflow-x-hidden font-sans;
+    @apply bg-background text-foreground overflow-x-hidden font-sans;
   }
   body {
     @apply bg-background text-foreground has-[div[data-variant='inset']]:bg-sidebar min-h-svh w-full;
@@ -743,5 +743,99 @@ For commercial licensing, please contact support@quantumnous.com
 @media (prefers-reduced-motion: reduce) {
   .auto-group-flow-border {
     display: none;
+  }
+}
+
+/* ── Homepage AI Gateway Convergence & Smart Routing Stage ── */
+@keyframes mihouo-beam-flow {
+  from {
+    stroke-dashoffset: 240;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes mihouo-radar-ring {
+  0% {
+    transform: scale(0.78);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.68);
+    opacity: 0;
+  }
+}
+
+@keyframes mihouo-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mihouo-marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes mihouo-marquee-right {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.mihouo-beam-in {
+  stroke-dasharray: 18 222;
+  animation: mihouo-beam-flow 2.8s linear infinite;
+}
+
+.mihouo-beam-out {
+  stroke-dasharray: 22 218;
+  animation: mihouo-beam-flow 2.4s linear infinite;
+}
+
+.mihouo-radar-ring {
+  animation: mihouo-radar-ring 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+.mihouo-radar-ring-delayed {
+  animation: mihouo-radar-ring 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) 1.6s infinite;
+}
+
+.mihouo-orbit-spin {
+  animation: mihouo-orbit-spin 28s linear infinite;
+}
+
+.mihouo-marquee-left {
+  animation: mihouo-marquee-left 42s linear infinite;
+  will-change: transform;
+}
+
+.mihouo-marquee-right {
+  animation: mihouo-marquee-right 46s linear infinite;
+  will-change: transform;
+}
+
+.mihouo-marquee-left:hover,
+.mihouo-marquee-right:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mihouo-beam-in,
+  .mihouo-beam-out,
+  .mihouo-radar-ring,
+  .mihouo-radar-ring-delayed,
+  .mihouo-orbit-spin,
+  .mihouo-marquee-left,
+  .mihouo-marquee-right {
+    animation: none !important;
   }
 }

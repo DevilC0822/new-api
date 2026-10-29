@@ -16,7 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   createMemoryHistory,
@@ -86,27 +85,30 @@ afterEach(() => {
 })
 
 describe('Docs page behavior and interactive workbenches', () => {
-  it('renders the porcelain docs header, default gateway origin, and core sections when loaded', async () => {
+  it('renders the streamlined docs header, dual Base URLs, single model example, and 4 focused sections', async () => {
     useSystemConfigStore.setState({ loading: false })
     await renderDocsPage()
 
     expect(
-      screen.getByRole('heading', { name: /MIHOUO 统一网关技术手册/ })
+      screen.getByRole('heading', { name: 'Integration Docs' })
     ).toBeInTheDocument()
     expect(
       screen.getAllByText('https://api.mihouo.com').length
     ).toBeGreaterThan(0)
     expect(
-      screen.getByRole('heading', { name: '平台架构与核心优势' })
+      screen.getAllByText('https://api.mihouo.com/v1').length
+    ).toBeGreaterThan(0)
+    expect(
+      screen.getByRole('heading', { name: 'Quickstart' })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: '客户端与 IDE 深度接入指南' })
+      screen.getByRole('heading', { name: 'Client Configuration' })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: '多协议 API 接口参考' })
+      screen.getByRole('heading', { name: 'API Reference' })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: '状态码参考与热备容灾' })
+      screen.getByRole('heading', { name: 'Status Codes & Troubleshooting' })
     ).toBeInTheDocument()
   })
 
@@ -118,19 +120,14 @@ describe('Docs page behavior and interactive workbenches', () => {
     fireEvent.click(codexTab)
 
     expect(codexTab).toHaveAttribute('aria-selected', 'true')
-    expect(
-      screen.getByRole('heading', { name: /配置 Codex CLI/ })
-    ).toBeInTheDocument()
     expect(screen.getByText(/codex --model gpt-6-astra/)).toBeInTheDocument()
 
     const configFileBtn = screen.getByRole('button', {
-      name: '方式 B · 配置文件',
+      name: 'Config File',
     })
     fireEvent.click(configFileBtn)
 
-    expect(
-      screen.getByText('持久化配置文件（~/.codex/config.toml）')
-    ).toBeInTheDocument()
+    expect(screen.getByText('~/.codex/config.toml')).toBeInTheDocument()
     expect(screen.getByText(/wire_api = "responses"/)).toBeInTheDocument()
   })
 
@@ -145,32 +142,7 @@ describe('Docs page behavior and interactive workbenches', () => {
     fireEvent.click(pythonTab)
 
     expect(screen.getByText(/client\.responses\.create/)).toBeInTheDocument()
-    expect(screen.getByText('max_output_tokens')).toBeInTheDocument()
-  })
-
-  it('filters sections by search keyword and restores all sections when reset button is clicked', async () => {
-    useSystemConfigStore.setState({ loading: false })
-    await renderDocsPage()
-
-    const searchInput = screen.getByRole('searchbox', {
-      name: '搜索文档内容',
-    })
-    fireEvent.change(searchInput, {
-      target: { value: 'nonexistent-keyword-xyz' },
-    })
-
-    expect(
-      screen.getByRole('heading', { name: '未找到匹配的文档章节' })
-    ).toBeInTheDocument()
-
-    const resetBtn = screen.getByRole('button', {
-      name: '重置搜索并查看全部章节',
-    })
-    fireEvent.click(resetBtn)
-
-    expect(
-      screen.getByRole('heading', { name: '平台架构与核心优势' })
-    ).toBeInTheDocument()
+    expect(screen.getByText('reasoning')).toBeInTheDocument()
   })
 
   it('always keeps the Docs navigation link internal to /docs without opening a new tab', async () => {
@@ -187,24 +159,22 @@ describe('Docs page behavior and interactive workbenches', () => {
     }
   })
 
-  it('renders the MIHOUO About showcase page and switches architecture inspector tabs', async () => {
+  it('renders the MIHOUO About showcase page with core engineering tenets and open-source attribution', async () => {
     useSystemConfigStore.setState({ loading: false })
     await renderPublicPage('/about')
 
     expect(
-      screen.getByRole('heading', { name: /如火传薪，为下一代智能工程/ })
+      screen.getByRole('heading', {
+        name: /Passing the Torch: Resilient AI Gateway Infrastructure/,
+      })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: '三大核心工程准则' })
+      screen.getByRole('heading', { name: 'Core Engineering Principles' })
     ).toBeInTheDocument()
-
-    const securityTab = screen.getByRole('tab', {
-      name: /零留存隐私与安全治理/,
-    })
-    fireEvent.click(securityTab)
-
     expect(
-      screen.getByRole('heading', { name: '零载荷数据留存承诺' })
+      screen.getByRole('heading', {
+        name: 'Open Source Ecosystem & Attribution',
+      })
     ).toBeInTheDocument()
   })
 })

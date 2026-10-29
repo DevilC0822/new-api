@@ -16,423 +16,319 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Terminal } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { ArrowRight, Terminal } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { AnimateInView } from '@/components/animate-in-view'
 import { CopyButton } from '@/components/copy-button'
+import { Button } from '@/components/ui/button'
 import { DEFAULT_GATEWAY_ORIGIN } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
-interface ClientGuideItem {
-  id: string
-  name: string
-  subtitle: string
-  tag: string
-  protocol: string
-  recommendedModel: string
-  baseUrl: string
-  baseUrlNote: string
-  authHeader: string
-  envTitle: string
-  envCode: string
-  configTitle: string
-  configCode: string
+interface OnboardingStepItem {
+  num: string
+  timePill: string
+  title: string
+  kvLabel: string
+  kvValue: string
+  kvTone: 'default' | 'blue' | 'emerald'
+  pills: [string, string, string]
+  pillTone: 'blue' | 'slate' | 'emerald'
+  topBarClass: string
 }
 
-const CLIENT_GUIDES: ClientGuideItem[] = [
+const ONBOARDING_STEPS: OnboardingStepItem[] = [
+  {
+    num: '01',
+    timePill: 'Single Key Across Providers',
+    title: 'Create an API Key',
+    kvLabel: 'Credential Format',
+    kvValue: 'Bearer sk-••••',
+    kvTone: 'default',
+    pills: ['Universal', 'Quota Limits', 'IP Allowlist'],
+    pillTone: 'blue',
+    topBarClass: 'from-blue-600 to-indigo-500',
+  },
+  {
+    num: '02',
+    timePill: 'Official SDK Compatible',
+    title: 'Configure Endpoint or Import',
+    kvLabel: 'Endpoint URL',
+    kvValue: DEFAULT_GATEWAY_ORIGIN,
+    kvTone: 'blue',
+    pills: ['Anthropic Protocol', 'OpenAI Protocol', 'One-Click Import'],
+    pillTone: 'slate',
+    topBarClass: 'from-cyan-500 to-blue-600',
+  },
+  {
+    num: '03',
+    timePill: 'Zero Migration Overhead',
+    title: 'Start Calling & Monitor Logs',
+    kvLabel: 'Response Mode',
+    kvValue: 'SSE Stream / Sync JSON',
+    kvTone: 'emerald',
+    pills: ['Fast TTFT', 'Real-time Tracking', 'Granular Logs'],
+    pillTone: 'emerald',
+    topBarClass: 'from-emerald-500 to-teal-500',
+  },
+]
+
+interface QuickstartSnippetItem {
+  id: string
+  label: string
+  protocol: string
+  code: string
+}
+
+const QUICKSTART_SNIPPETS: QuickstartSnippetItem[] = [
   {
     id: 'claude-code',
-    name: 'Claude Code',
-    subtitle: 'Anthropic 官方终端编码工具 · 支持环境变量与配置文件接入',
-    tag: '主力推荐',
-    protocol: 'POST /v1/messages',
-    recommendedModel: 'claude-opus-5-5 · claude-sonnet-5-5',
-    baseUrl: DEFAULT_GATEWAY_ORIGIN,
-    baseUrlNote:
-      'Claude Code 会自动拼接 /v1/messages，ANTHROPIC_BASE_URL 请直接填写根域名，无需附加 /v1。',
-    authHeader: 'x-api-key / ANTHROPIC_AUTH_TOKEN',
-    envTitle: '终端环境变量（即开即用）',
-    envCode: `export ANTHROPIC_BASE_URL="${DEFAULT_GATEWAY_ORIGIN}"
-export ANTHROPIC_AUTH_TOKEN="sk-mihouo-your-api-key"
+    label: 'Claude Code Terminal',
+    protocol: 'Anthropic /v1/messages',
+    code: `export ANTHROPIC_BASE_URL="${DEFAULT_GATEWAY_ORIGIN}"
+export ANTHROPIC_AUTH_TOKEN="sk-your-api-key"
 claude --model claude-opus-5-5`,
-    configTitle: '配置文件（~/.claude/settings.json）',
-    configCode: `{
-  "env": {
-    "ANTHROPIC_BASE_URL": "${DEFAULT_GATEWAY_ORIGIN}",
-    "ANTHROPIC_AUTH_TOKEN": "sk-mihouo-your-api-key",
-    "ANTHROPIC_MODEL": "claude-opus-5-5",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-haiku-5-5"
-  }
-}`,
   },
   {
     id: 'codex-cli',
-    name: 'Codex CLI',
-    subtitle: 'OpenAI 官方终端智能体工具',
-    tag: '原生支持',
-    protocol: 'POST /v1/responses',
-    recommendedModel: 'gpt-6-astra · gpt-6.1-sol',
-    baseUrl: `${DEFAULT_GATEWAY_ORIGIN}/v1`,
-    baseUrlNote:
-      'OpenAI Codex CLI 与 Responses SDK 均以 /v1 作为基准路径，支持在会话中配置 reasoning.effort。',
-    authHeader: 'Authorization: Bearer YOUR_API_KEY',
-    envTitle: '终端环境变量（快速启动）',
-    envCode: `export OPENAI_BASE_URL="${DEFAULT_GATEWAY_ORIGIN}/v1"
-export OPENAI_API_KEY="sk-mihouo-your-api-key"
+    label: 'Codex CLI',
+    protocol: 'OpenAI /v1/responses',
+    code: `export OPENAI_BASE_URL="${DEFAULT_GATEWAY_ORIGIN}/v1"
+export OPENAI_API_KEY="sk-your-api-key"
 codex --model gpt-6-astra`,
-    configTitle: '配置文件（~/.codex/config.toml）',
-    configCode: `model = "gpt-6-astra"
-model_provider = "mihouo"
-model_reasoning_effort = "high"
-
-[model_providers.mihouo]
-name = "MIHOUO Optical Gateway"
-base_url = "${DEFAULT_GATEWAY_ORIGIN}/v1"
-env_key = "OPENAI_API_KEY"
-wire_api = "responses"`,
   },
   {
-    id: 'opencode',
-    name: 'opencode',
-    subtitle: '开源终端多模型编码工具',
-    tag: '多模型切换',
-    protocol: 'Messages & Responses',
-    recommendedModel: 'claude-opus-5-5 · glm-5.3',
-    baseUrl: `${DEFAULT_GATEWAY_ORIGIN}/v1`,
-    baseUrlNote:
-      'opencode 支持配置多个模型列表，共用同一个 API Key 即可切换 Claude Opus 5.5、GPT-6 Astra 与 GLM-5.3。',
-    authHeader: 'Authorization: Bearer / x-api-key',
-    envTitle: '终端启动命令',
-    envCode: `export OPENAI_BASE_URL="${DEFAULT_GATEWAY_ORIGIN}/v1"
-export OPENAI_API_KEY="sk-mihouo-your-api-key"
-opencode --model claude-opus-5-5`,
-    configTitle: '配置文件（~/.config/opencode/opencode.json）',
-    configCode: `{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "mihouo": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "MIHOUO Gateway",
-      "options": {
-        "baseURL": "${DEFAULT_GATEWAY_ORIGIN}/v1",
-        "apiKey": "{env:OPENAI_API_KEY}"
-      },
-      "models": {
-        "claude-opus-5-5": { "name": "Claude Opus 5.5 (1M)" },
-        "gpt-6-astra": { "name": "GPT-6 Astra (1.05M)" },
-        "glm-5.3": { "name": "GLM-5.3" },
-        "deepseek-v4-pro": { "name": "DeepSeek V4 Pro" }
-      }
-    }
-  }
-}`,
+    id: 'anthropic-sdk',
+    label: 'Anthropic SDK',
+    protocol: 'Python / TypeScript',
+    code: `import Anthropic from '@anthropic-ai/sdk';
+const client = new Anthropic({ baseURL: '${DEFAULT_GATEWAY_ORIGIN}', apiKey: process.env.API_KEY });
+const msg = await client.messages.create({ model: 'claude-opus-5-5', max_tokens: 4096, messages: [{ role: 'user', content: 'Hello' }] });`,
   },
   {
-    id: 'claude-desktop',
-    name: 'Claude Desktop / VS Code',
-    subtitle: '桌面端与 VS Code 扩展配置',
-    tag: 'IDE 插件',
-    protocol: 'POST /v1/messages',
-    recommendedModel: 'claude-opus-5-5 · claude-fable-5-1',
-    baseUrl: DEFAULT_GATEWAY_ORIGIN,
-    baseUrlNote:
-      'VS Code 与 JetBrains 插件默认不读取终端 Shell 变量，需在 settings.json 中配置 environmentVariables 并关闭登录弹窗。',
-    authHeader: 'x-api-key: YOUR_API_KEY',
-    envTitle: 'VS Code 扩展设置（.vscode/settings.json）',
-    envCode: `{
-  "claudeCode.disableLoginPrompt": true,
-  "claudeCode.environmentVariables": [
-    { "name": "ANTHROPIC_BASE_URL", "value": "${DEFAULT_GATEWAY_ORIGIN}" },
-    { "name": "ANTHROPIC_AUTH_TOKEN", "value": "sk-mihouo-your-api-key" }
-  ]
-}`,
-    configTitle: '客户端配置文件（~/.claude/config.json）',
-    configCode: `{
-  "primaryApiKey": "sk-mihouo-your-api-key",
-  "customApiUrl": "${DEFAULT_GATEWAY_ORIGIN}",
-  "defaultModel": "claude-opus-5-5",
-  "hasCompletedOnboarding": true
-}`,
-  },
-  {
-    id: 'cursor-windsurf',
-    name: 'Cursor / Windsurf / Cline',
-    subtitle: 'AI 编辑器自定义 Base URL',
-    tag: '编辑器',
-    protocol: 'POST /v1/chat/completions',
-    recommendedModel: 'claude-opus-5-5 · gpt-6.1-sol · deepseek-v4-pro',
-    baseUrl: `${DEFAULT_GATEWAY_ORIGIN}/v1`,
-    baseUrlNote:
-      '在 Cursor Settings → Models 或 Cline 设置中开启 Override OpenAI Base URL，填入下方含 /v1 的地址即可调用全部模型。',
-    authHeader: 'Authorization: Bearer YOUR_API_KEY',
-    envTitle: 'Cursor / Windsurf 界面配置参数',
-    envCode: `OpenAI API Key  : sk-mihouo-your-api-key
-Override Base URL: ${DEFAULT_GATEWAY_ORIGIN}/v1
-Custom Models   : claude-opus-5-5, gpt-6-astra, gpt-6.1-sol, glm-5.3, deepseek-v4-pro`,
-    configTitle: 'Cline / Roo Code 配置文件（settings.json）',
-    configCode: `{
-  "cline.apiProvider": "openai",
-  "cline.openAiBaseUrl": "${DEFAULT_GATEWAY_ORIGIN}/v1",
-  "cline.openAiApiKey": "sk-mihouo-your-api-key",
-  "cline.openAiModelId": "claude-opus-5-5",
-  "cline.openAiStreamingEnabled": true
-}`,
-  },
-  {
-    id: 'standard-sdk',
-    name: 'cURL / Python & TS SDK',
-    subtitle: 'OpenAI 与 Anthropic 标准 SDK',
-    tag: '官方 SDK',
-    protocol: 'OpenAI & Anthropic SDK',
-    recommendedModel: '支持平台全部已上线模型',
-    baseUrl: `${DEFAULT_GATEWAY_ORIGIN}/v1`,
-    baseUrlNote:
-      '无论项目使用官方 openai 还是 @anthropic-ai/sdk，均无需安装额外封装库，替换 base_url 与 api_key 即可直接调用。',
-    authHeader: 'Bearer / x-api-key 双模鉴权',
-    envTitle: 'Python 官方 SDK（OpenAI Responses / Chat）',
-    envCode: `from openai import OpenAI
-
-client = OpenAI(
-    base_url="${DEFAULT_GATEWAY_ORIGIN}/v1",
-    api_key="sk-mihouo-your-api-key",
-)
-
-resp = client.responses.create(
-    model="gpt-6-astra",
-    reasoning={"effort": "high"},
-    input="Design a lock-free ring buffer in Rust",
-)`,
-    configTitle: 'TypeScript 官方 SDK（Anthropic Messages）',
-    configCode: `import Anthropic from '@anthropic-ai/sdk';
-
-const client = new Anthropic({
-  baseURL: '${DEFAULT_GATEWAY_ORIGIN}',
-  apiKey: process.env.MIHOUO_API_KEY,
-});
-
-const msg = await client.messages.create({
-  model: 'claude-opus-5-5',
-  max_tokens: 4096,
-  messages: [{ role: 'user', content: 'Optimize WebGL shader pipeline' }],
-});`,
+    id: 'openai-sdk',
+    label: 'OpenAI SDK',
+    protocol: 'Python / TypeScript',
+    code: `import OpenAI from 'openai';
+const client = new OpenAI({ baseURL: '${DEFAULT_GATEWAY_ORIGIN}/v1', apiKey: process.env.API_KEY });
+const res = await client.chat.completions.create({ model: 'deepseek-v4-pro', messages: [{ role: 'user', content: 'Hello' }] });`,
   },
 ]
 
 export function HowItWorks() {
   const { t } = useTranslation()
-  const [activeClientId, setActiveClientId] = useState<string>('claude-code')
-  const [configTab, setConfigTab] = useState<'env' | 'config'>('env')
-
-  const activeClient =
-    CLIENT_GUIDES.find((c) => c.id === activeClientId) || CLIENT_GUIDES[0]
-  const activeCode =
-    configTab === 'env' ? activeClient.envCode : activeClient.configCode
+  const [activeSnippetIdx, setActiveSnippetIdx] = useState(0)
+  const activeSnippet =
+    QUICKSTART_SNIPPETS[activeSnippetIdx] ?? QUICKSTART_SNIPPETS[0]
 
   return (
     <section
-      id='client-integration-hub'
-      className='border-border relative z-10 border-t py-14 md:py-20'
+      id='onboarding'
+      className='relative z-10 border-t border-[#0F172A]/[0.08] py-20 dark:border-white/10'
     >
-      <div className='mx-auto max-w-[1280px] px-6 md:px-12'>
+      <div className='mx-auto max-w-[1220px] px-6'>
         {/* Section Header */}
-        <AnimateInView className='mb-10 flex flex-col justify-between gap-4 md:mb-12 md:flex-row md:items-end'>
+        <AnimateInView className='mb-11 flex flex-col justify-between gap-6 md:flex-row md:items-end'>
           <div>
-            <div className='text-muted-foreground mb-2.5 inline-flex items-center gap-2.5 text-xs tracking-[0.14em]'>
-              <span className='bg-foreground/35 inline-block h-px w-5' />
-              <span>{t('How It Works')}</span>
+            <div className='mb-2.5 inline-flex items-center gap-2 font-mono text-[11.5px] font-semibold tracking-[0.06em] text-blue-600 uppercase dark:text-blue-400'>
+              QUICKSTART
             </div>
-            <h2 className='font-serif text-2xl font-normal tracking-tight md:text-[34px]'>
-              {t('Three steps to get started')}
+            <h2 className='text-[clamp(1.75rem,2.6vw,2.35rem)] leading-[1.22] font-bold tracking-[-0.025em] text-[#0F172A] dark:text-white'>
+              {t('Get Started in 3 Simple Steps, Zero Code Changes')}
             </h2>
           </div>
-          <p className='text-muted-foreground max-w-md text-[13.5px] leading-[1.65]'>
-            点击左侧客户端切换专属配置
-          </p>
+
+          <Button
+            variant='outline'
+            className='group h-10 rounded-full border border-[#0F172A]/14 bg-white px-5 text-[13px] font-semibold text-[#0F172A] shadow-[0_2px_6px_rgba(15,23,42,0.03)] transition-all hover:border-[#0F172A]/25 hover:bg-[#F8FAFC] dark:border-white/20 dark:bg-zinc-900 dark:text-zinc-100'
+            render={<Link to='/docs' />}
+          >
+            <span>{t('View Documentation')}</span>
+            <ArrowRight className='ml-1.5 size-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
+          </Button>
         </AnimateInView>
 
-        {/* Split Client Integration Hub (Left Sidebar Switcher + Right Configuration Workbench) */}
-        <AnimateInView animation='fade-up'>
-          <div className='border-border bg-card overflow-hidden rounded-[22px] border shadow-[0_24px_52px_-14px_rgba(20,20,18,0.065)]'>
-            <div className='grid grid-cols-1 lg:grid-cols-12'>
-              {/* Left Column: Client Switcher Sidebar (4 cols) */}
-              <div className='border-border flex flex-col border-b bg-[#F8F7F3] p-5 md:p-6 lg:col-span-4 lg:border-r lg:border-b-0 dark:bg-zinc-900/65'>
-                <div className='border-border/80 mb-3.5 flex items-center justify-between border-b pb-3'>
-                  <div className='flex items-center gap-2'>
-                    <Terminal className='text-foreground size-3.5' />
-                    <span className='text-foreground text-xs font-semibold tracking-[0.08em]'>
-                      选择客户端
+        {/* 3-Step Equal-Height Grid */}
+        <div className='grid grid-cols-1 items-stretch gap-5 lg:grid-cols-3'>
+          {ONBOARDING_STEPS.map((step, idx) => {
+            let chipClass =
+              'border-[#0F172A]/[0.08] bg-[#F8FAFC] text-[#0F172A] dark:border-white/10 dark:bg-zinc-800 dark:text-white'
+            if (step.kvTone === 'blue') {
+              chipClass =
+                'border-blue-600/20 bg-blue-50 text-blue-600 dark:border-blue-400/25 dark:bg-blue-950/50 dark:text-blue-400'
+            } else if (step.kvTone === 'emerald') {
+              chipClass =
+                'border-emerald-600/20 bg-emerald-50 text-emerald-600 dark:border-emerald-400/25 dark:bg-emerald-950/50 dark:text-emerald-400'
+            }
+
+            let pillClass =
+              'bg-blue-600/[0.06] text-blue-600 dark:bg-blue-500/15 dark:text-blue-400'
+            if (step.pillTone === 'slate') {
+              pillClass =
+                'bg-[#F1F5F9] text-[#334155] dark:bg-zinc-800 dark:text-zinc-200'
+            } else if (step.pillTone === 'emerald') {
+              pillClass =
+                'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
+            }
+
+            return (
+              <AnimateInView
+                key={step.num}
+                animation='fade-up'
+                delay={idx * 60}
+                className='group relative flex flex-col justify-between gap-5.5 overflow-hidden rounded-[24px] border border-[#0F172A]/[0.08] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] p-7 shadow-[0_12px_32px_-18px_rgba(15,23,42,0.04)] transition-all duration-250 hover:-translate-y-0.5 hover:border-blue-600/25 dark:border-white/10 dark:bg-zinc-900 dark:bg-none'
+              >
+                {/* Top Optical Accent Line */}
+                <div
+                  aria-hidden='true'
+                  className={cn(
+                    'absolute inset-x-0 top-0 h-1 bg-gradient-to-r opacity-85 transition-opacity group-hover:opacity-100',
+                    step.topBarClass
+                  )}
+                />
+
+                <div>
+                  <div className='mb-4.5 flex items-center justify-between'>
+                    <div className='inline-flex items-center gap-2'>
+                      <div className='flex size-[34px] items-center justify-center rounded-[10px] border border-blue-600/16 bg-blue-600/[0.08] font-mono text-[13px] font-bold text-blue-600 dark:border-blue-400/25 dark:bg-blue-500/15 dark:text-blue-400'>
+                        {step.num}
+                      </div>
+                      <span className='font-mono text-[11px] font-semibold tracking-[0.08em] text-[#94A3B8] uppercase'>
+                        STEP {step.num}
+                      </span>
+                    </div>
+                    <span className='rounded-full bg-[#F1F5F9] px-2.5 py-1 text-[11.5px] font-semibold text-[#334155] dark:bg-zinc-800 dark:text-zinc-300'>
+                      {t(step.timePill)}
                     </span>
                   </div>
-                  <span className='text-muted-foreground font-mono text-[11px]'>
-                    6 种常用工具
-                  </span>
+
+                  <h3 className='mb-2 text-[19px] font-bold tracking-[-0.02em] text-[#0F172A] dark:text-white'>
+                    {t(step.title)}
+                  </h3>
+
+                  {step.num === '01' && (
+                    <p className='min-h-[68px] text-[13.5px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
+                      {t(
+                        'Sign up and generate an API key in the console. One key works across all providers, with customizable quota limits and model access scopes.'
+                      )}
+                    </p>
+                  )}
+                  {step.num === '02' && (
+                    <p className='min-h-[68px] text-[13.5px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
+                      {t(
+                        'Set the gateway endpoint in Claude Code or Codex CLI, or import directly into Cherry Studio and CC Switch.'
+                      )}
+                    </p>
+                  )}
+                  {step.num === '03' && (
+                    <p className='min-h-[68px] text-[13.5px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
+                      {t(
+                        'Make requests directly with target model identifiers. Review response latency, throughput, and status logs in the console anytime.'
+                      )}
+                    </p>
+                  )}
                 </div>
 
-                <div
-                  className='space-y-1.5'
-                  role='tablist'
-                  aria-label='接入客户端列表'
-                >
-                  {CLIENT_GUIDES.map((client) => {
-                    const isSelected = client.id === activeClient.id
-                    return (
-                      <button
-                        key={client.id}
-                        type='button'
-                        role='tab'
-                        aria-selected={isSelected}
-                        onClick={() => setActiveClientId(client.id)}
+                <div className='flex flex-col gap-2.5 rounded-[14px] border border-[#0F172A]/[0.08] bg-white p-[14px_16px] shadow-[0_2px_8px_rgba(15,23,42,0.02)] dark:border-white/10 dark:bg-zinc-800/60'>
+                  <div className='flex min-h-[26px] items-center justify-between gap-2 font-mono text-[12px]'>
+                    <span className='truncate text-[#64748B] dark:text-zinc-400'>
+                      {t(step.kvLabel)}
+                    </span>
+                    <div className='flex shrink-0 items-center gap-1'>
+                      <span
                         className={cn(
-                          'group flex w-full items-center justify-between gap-2 rounded-[14px] border px-4 py-3 text-left transition-all duration-200',
-                          isSelected
-                            ? 'border-white bg-white text-[#141413] shadow-[0_10px_24px_-8px_rgba(20,20,18,0.09),0_2px_6px_rgba(20,20,18,0.03)] dark:border-white/20 dark:bg-zinc-800 dark:text-white'
-                            : 'border-transparent bg-transparent text-[#52524E] hover:border-black/5 hover:bg-white/60 hover:text-[#141413] dark:text-zinc-400 dark:hover:bg-zinc-800/40 dark:hover:text-zinc-100'
+                          'rounded-md border px-2.5 py-0.5 font-semibold whitespace-nowrap',
+                          chipClass
                         )}
                       >
-                        <span className='flex items-center gap-2 text-[13.5px] font-semibold tracking-tight'>
-                          <span
-                            className={cn(
-                              'size-1.5 rounded-full transition-colors',
-                              isSelected
-                                ? 'bg-[#141413] dark:bg-white'
-                                : 'bg-black/20 dark:bg-white/20'
-                            )}
-                          />
-                          <span>{client.name}</span>
-                        </span>
-                        <span
-                          className={cn(
-                            'rounded-full px-2 py-0.5 font-mono text-[10px] transition-colors',
-                            isSelected
-                              ? 'bg-[#141413] text-white dark:bg-white dark:text-[#141413]'
-                              : 'bg-black/[0.04] text-[#71717A] dark:bg-white/10 dark:text-zinc-400'
-                          )}
-                        >
-                          {client.tag}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Right Column: Streamlined Client Configuration Workbench (8 cols) */}
-              <div className='flex min-w-0 flex-col justify-between p-6 md:p-8 lg:col-span-8'>
-                <div>
-                  {/* Client Top Header */}
-                  <div className='border-border/80 flex flex-wrap items-start justify-between gap-4 border-b pb-4'>
-                    <div>
-                      <h3 className='text-foreground font-serif text-xl font-normal tracking-tight md:text-2xl'>
-                        {activeClient.name}
-                      </h3>
-                      <p className='text-muted-foreground mt-1 text-[13px]'>
-                        {activeClient.subtitle}
-                      </p>
-                    </div>
-
-                    <div className='flex flex-col items-start gap-1.5 sm:items-end'>
-                      <span className='border-border bg-background text-foreground rounded-full border px-3 py-1 font-mono text-[11px] font-medium'>
-                        {activeClient.protocol}
+                        {step.kvValue}
                       </span>
-                      <span className='text-muted-foreground font-mono text-[11px]'>
-                        推荐：{activeClient.recommendedModel}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Base URL Bar */}
-                  <div className='mt-5'>
-                    <div className='border-border flex flex-col justify-between gap-3 rounded-[14px] border bg-[#F8F7F3] px-4 py-3 sm:flex-row sm:items-center dark:bg-zinc-900/60'>
-                      <div className='min-w-0'>
-                        <div className='text-muted-foreground flex items-center gap-2 text-[11px]'>
-                          <span>Base URL</span>
-                          <span>·</span>
-                          <span className='font-mono'>
-                            {activeClient.authHeader}
-                          </span>
-                        </div>
-                        <code className='text-foreground mt-0.5 block truncate font-mono text-[13.5px] font-semibold'>
-                          {activeClient.baseUrl}
-                        </code>
-                      </div>
-                      <CopyButton
-                        value={activeClient.baseUrl}
-                        variant='outline'
-                        size='sm'
-                        aria-label='复制 Base URL'
-                        className='rounded-full px-3.5 font-mono text-[11.5px]'
-                      >
-                        <span>复制 Base URL</span>
-                      </CopyButton>
-                    </div>
-                    <p className='text-muted-foreground mt-2 text-[12px] leading-[1.6]'>
-                      {activeClient.baseUrlNote}
-                    </p>
-                  </div>
-
-                  {/* Client Configuration Code Block */}
-                  <div className='mt-5'>
-                    <div className='mb-2.5 flex flex-wrap items-center justify-between gap-2'>
-                      <span className='text-foreground text-[13.5px] font-semibold'>
-                        配置示例
-                      </span>
-
-                      <div className='border-border inline-flex rounded-full border bg-[#F6F5F0] p-0.5 dark:bg-zinc-800'>
-                        <button
-                          type='button'
-                          onClick={() => setConfigTab('env')}
-                          className={cn(
-                            'rounded-full px-3 py-1 text-[11.5px] font-medium transition-all',
-                            configTab === 'env'
-                              ? 'bg-white text-[#141413] shadow-xs dark:bg-zinc-900 dark:text-white'
-                              : 'text-muted-foreground hover:text-foreground'
-                          )}
-                        >
-                          方式 A · 环境变量
-                        </button>
-                        <button
-                          type='button'
-                          onClick={() => setConfigTab('config')}
-                          className={cn(
-                            'rounded-full px-3 py-1 text-[11.5px] font-medium transition-all',
-                            configTab === 'config'
-                              ? 'bg-white text-[#141413] shadow-xs dark:bg-zinc-900 dark:text-white'
-                              : 'text-muted-foreground hover:text-foreground'
-                          )}
-                        >
-                          方式 B · 配置文件
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className='border-border overflow-hidden rounded-[14px] border bg-[#161615] text-[#F4F3EE]'>
-                      <div className='flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-4 py-2'>
-                        <span className='font-mono text-[11.5px] text-zinc-400'>
-                          {configTab === 'env'
-                            ? activeClient.envTitle
-                            : activeClient.configTitle}
-                        </span>
+                      {step.num === '02' && (
                         <CopyButton
-                          value={activeCode}
+                          value={DEFAULT_GATEWAY_ORIGIN}
                           variant='ghost'
                           size='sm'
-                          aria-label='复制配置'
-                          className='h-6.5 rounded-full border border-white/15 bg-white/5 px-2.5 font-mono text-[11px] text-zinc-200 hover:bg-white/15 hover:text-white'
-                        >
-                          <span>复制配置</span>
-                        </CopyButton>
-                      </div>
-                      <pre className='overflow-x-auto p-4 font-mono text-[12px] leading-[1.7] text-zinc-100'>
-                        <code>{activeCode}</code>
-                      </pre>
+                          className='size-6 rounded-md text-[#64748B] hover:text-[#0F172A] dark:text-zinc-400 dark:hover:text-white'
+                          iconClassName='size-3.5'
+                        />
+                      )}
                     </div>
                   </div>
+
+                  <div className='flex flex-wrap items-center gap-1.5'>
+                    {step.pills.map((pill) => (
+                      <span
+                        key={pill}
+                        className={cn(
+                          'flex-1 min-w-fit rounded-md px-2.5 py-1 text-center text-[11px] font-semibold whitespace-nowrap',
+                          pillClass
+                        )}
+                      >
+                        {t(pill)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+              </AnimateInView>
+            )
+          })}
+        </div>
+
+        {/* Interactive Multi-Environment Quickstart Command Bar (Theme-Adaptive) */}
+        <AnimateInView
+          animation='fade-up'
+          delay={180}
+          className='mt-6 overflow-hidden rounded-[22px] border border-[#0F172A]/[0.08] bg-white text-[#0F172A] shadow-[0_14px_34px_-18px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-zinc-900 dark:text-slate-100'
+        >
+          <div className='flex flex-wrap items-center justify-between gap-3 border-b border-[#0F172A]/[0.07] bg-[#F8FAFC] px-5 py-3 dark:border-white/10 dark:bg-zinc-950/60'>
+            <div className='flex flex-wrap items-center gap-2.5'>
+              <span className='inline-flex items-center gap-1.5 font-mono text-[11.5px] font-bold text-blue-600 dark:text-sky-400'>
+                <Terminal className='size-3.5' />
+                <span>{t('30-Second Quick Test')}</span>
+              </span>
+              <div className='flex flex-wrap items-center gap-1 rounded-lg border border-[#0F172A]/[0.06] bg-[#F1F5F9] p-1 dark:border-white/10 dark:bg-white/[0.05]'>
+                {QUICKSTART_SNIPPETS.map((snippet, idx) => {
+                  const isActive = idx === activeSnippetIdx
+                  return (
+                    <button
+                      key={snippet.id}
+                      type='button'
+                      onClick={() => setActiveSnippetIdx(idx)}
+                      className={cn(
+                        'rounded-md px-2.5 py-1 font-mono text-[11.5px] font-semibold transition-all duration-150',
+                        isActive
+                          ? 'bg-white text-[#0F172A] shadow-xs dark:bg-blue-600 dark:text-white'
+                          : 'text-[#64748B] hover:text-[#0F172A] dark:text-slate-400 dark:hover:text-white'
+                      )}
+                    >
+                      {t(snippet.label)}
+                    </button>
+                  )
+                })}
               </div>
             </div>
+
+            <div className='flex items-center gap-2.5 font-mono text-[11.5px]'>
+              <span className='hidden rounded-full border border-[#0F172A]/[0.08] bg-white px-2.5 py-0.5 text-[#475569] sm:inline-block dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300'>
+                {activeSnippet.protocol}
+              </span>
+              <CopyButton
+                value={activeSnippet.code}
+                variant='outline'
+                size='sm'
+                className='h-7 gap-1.5 rounded-lg border-[#0F172A]/12 bg-white px-2.5 text-[11.5px] font-semibold text-[#0F172A] hover:bg-[#F1F5F9] dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/10'
+                iconClassName='size-3.5'
+              >
+                <span>{t('Copy code')}</span>
+              </CopyButton>
+            </div>
           </div>
+
+          <pre className='overflow-x-auto bg-white px-5 py-4 font-mono text-[12.5px] leading-[1.7] text-[#1E293B] dark:bg-zinc-900 dark:text-sky-200'>
+            <code>{activeSnippet.code}</code>
+          </pre>
         </AnimateInView>
       </div>
     </section>

@@ -71,12 +71,33 @@ if (!rootElement) {
 ;(function initSystemBranding() {
   try {
     if (typeof window === 'undefined' || typeof document === 'undefined') return
+
+    // Proactively heal any legacy brand string cached in localStorage
+    try {
+      for (const storageKey of [
+        'status',
+        'system-config-storage',
+        'newapi_status',
+      ]) {
+        const raw = window.localStorage.getItem(storageKey)
+        if (raw && raw.includes('弥火')) {
+          window.localStorage.setItem(
+            storageKey,
+            raw.replaceAll('弥火', '觅火')
+          )
+        }
+      }
+    } catch {
+      /* empty */
+    }
+
     const apply = (name: string) => {
-      document.title = name
+      const normalizedName = name.replaceAll('弥火', '觅火')
+      document.title = normalizedName
       const metaTitle = document.querySelector(
         'meta[name="title"]'
       ) as HTMLMetaElement | null
-      if (metaTitle) metaTitle.setAttribute('content', name)
+      if (metaTitle) metaTitle.setAttribute('content', normalizedName)
     }
     // Cache-first
     const cached = readCachedStatus()

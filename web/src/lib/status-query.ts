@@ -91,8 +91,13 @@ export function mapStatusDataToConfig(
     ),
   }
 
+  const rawSystemName =
+    typeof data.system_name === 'string'
+      ? data.system_name.replaceAll('弥火', '觅火').trim()
+      : undefined
+
   return {
-    systemName: (data.system_name as string | undefined) || DEFAULT_SYSTEM_NAME,
+    systemName: rawSystemName || DEFAULT_SYSTEM_NAME,
     logo: (data.logo as string | undefined) || DEFAULT_LOGO,
     footerHtml: data.footer_html as string | undefined,
     demoSiteEnabled: data.demo_site_enabled as boolean | undefined,
@@ -108,7 +113,12 @@ export function readCachedStatus(): StatusData | null {
   try {
     if (typeof window === 'undefined') return null
     const raw = window.localStorage.getItem(STATUS_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as StatusData) : null
+    if (!raw) return null
+    const sanitized = raw.replaceAll('弥火', '觅火')
+    if (sanitized !== raw) {
+      window.localStorage.setItem(STATUS_STORAGE_KEY, sanitized)
+    }
+    return JSON.parse(sanitized) as StatusData
   } catch {
     return null
   }

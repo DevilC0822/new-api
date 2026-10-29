@@ -119,7 +119,7 @@ function ProjectAttribution(props: { currentYear: number; inline?: boolean }) {
   const { t } = useTranslation()
   const content = (
     <span className='text-muted-foreground font-mono text-[11.5px]'>
-      {t('隐私承诺')}
+      {t('Stateless relay, zero retention, AGPL v3.0')}
     </span>
   )
   if (props.inline) {
@@ -138,39 +138,41 @@ export function Footer(props: FooterProps) {
 
   const displayLogo = systemLogo || props.logo || DEFAULT_LOGO
   const rawName = systemName || props.name || DEFAULT_SYSTEM_NAME
-  const displayName = rawName === 'New API' ? DEFAULT_SYSTEM_NAME : rawName
+  const displayName = (
+    rawName === 'New API' ? DEFAULT_SYSTEM_NAME : rawName
+  ).replaceAll('弥火', '觅火')
   const currentYear = new Date().getFullYear()
 
   const fallbackColumns = useMemo<FooterColumnProps[]>(
     () => [
       {
-        title: t('产品与服务'),
+        title: t('Products & Services'),
         links: [
-          { text: t('Console'), href: '/dashboard' },
-          { text: t('Model Square'), href: '/pricing' },
-          { text: t('Playground'), href: '/playground' },
+          { text: 'Console', href: '/dashboard' },
+          { text: 'Model Square', href: '/pricing' },
+          { text: 'Playground', href: '/playground' },
         ],
       },
       {
-        title: t('常用客户端'),
+        title: t('Popular Clients'),
         links: [
-          { text: 'Claude Code 接入', href: '/docs' },
+          { text: 'Claude Code Setup', href: '/docs' },
           { text: 'OpenAI Codex CLI', href: '/docs' },
-          { text: t('API Keys'), href: '/keys' },
+          { text: 'API Keys', href: '/keys' },
         ],
       },
       {
-        title: t('支持与文档'),
+        title: t('Support & Docs'),
         links: [
           {
-            text: t('footer.columns.docs.links.quickStart'),
+            text: 'Quick Start',
             href: '/docs',
           },
           {
-            text: t('footer.columns.docs.links.apiDocs'),
+            text: 'API Reference',
             href: '/docs',
           },
-          { text: t('About'), href: '/about' },
+          { text: 'About', href: '/about' },
         ],
       },
     ],
@@ -200,40 +202,19 @@ export function Footer(props: FooterProps) {
     )
   }
 
-  // 设计稿同款单行精简页脚（仅首页使用）
+  // 确认设计稿同款极简页脚（首页使用）
   if (props.slim) {
     return (
       <footer
-        className={cn('border-border relative z-10 border-t', props.className)}
+        className={cn(
+          'relative z-10 border-t border-[#0F172A]/[0.08] py-8 pb-12 text-[13px] text-[#64748B] dark:border-white/10 dark:text-zinc-400',
+          props.className
+        )}
       >
-        <div className='mx-auto flex w-full max-w-[1280px] flex-col items-center justify-between gap-3 px-6 py-8 sm:flex-row md:px-12'>
-          <div className='text-muted-foreground text-[12.5px]'>
-            &copy; {currentYear} {displayName} (api.mihouo.com) ·{' '}
-            {props.copyright ?? t('footer.defaultCopyright')}
-          </div>
-          <div className='text-muted-foreground flex items-center gap-6 text-[12.5px]'>
-            <Link
-              to='/docs'
-              className='hover:text-foreground transition-colors'
-            >
-              {t('Docs')}
-            </Link>
-            <a
-              href='#client-integration-hub'
-              className='hover:text-foreground transition-colors'
-            >
-              {t('接入指南')}
-            </a>
-            <a
-              href='#models-section'
-              className='hover:text-foreground transition-colors'
-            >
-              {t('模型费率')}
-            </a>
-            <a href='#' className='hover:text-foreground transition-colors'>
-              {t('隐私承诺')}
-            </a>
-          </div>
+        <div className='mx-auto flex w-full max-w-[1220px] items-center justify-center px-6'>
+          <span>
+            &copy; {currentYear} {displayName}
+          </span>
         </div>
       </footer>
     )
@@ -258,10 +239,10 @@ export function Footer(props: FooterProps) {
                 />
               )}
               <div className='flex flex-col leading-none'>
-                <span className='font-serif text-[16px] font-normal tracking-[0.2em]'>
+                <span className='text-[15px] font-bold tracking-[0.06em] text-[#0F172A] dark:text-white'>
                   {displayName}
                 </span>
-                <span className='text-muted-foreground mt-1 font-mono text-[10.5px]'>
+                <span className='mt-0.5 font-mono text-[10px] text-[#64748B] dark:text-zinc-400'>
                   api.mihouo.com
                 </span>
               </div>
