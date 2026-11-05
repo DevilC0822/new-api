@@ -214,7 +214,7 @@ export function Stats() {
                   {t('Real-time Request Log Snapshot')}
                 </span>
                 <span className='shrink-0 rounded bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400'>
-                  TTFT 280ms · 86.4 tok/s
+                  SSE
                 </span>
               </div>
 
@@ -250,9 +250,6 @@ export function Stats() {
                   <span className='size-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' />
                   <span>status: 200 OK · SSE</span>
                 </span>
-                <span className='font-semibold text-blue-600 dark:text-blue-400'>
-                  cache_hit: 81.2%
-                </span>
               </div>
             </div>
           </AnimateInView>
@@ -272,7 +269,7 @@ export function Stats() {
               </h3>
               <p className='text-[13.5px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
                 {t(
-                  'The gateway logs metering metadata only and does not store prompt payloads or code content by default; supports restricted sub-tokens for teams or CI environments.'
+                  'The gateway logs metering metadata only and never stores your prompt payloads or code content; supports restricted sub-tokens for teams or CI environments.'
                 )}
               </p>
             </div>

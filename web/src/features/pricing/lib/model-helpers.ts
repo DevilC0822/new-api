@@ -95,6 +95,23 @@ export function getDisplayGroupRatio(
 }
 
 /**
+ * Discount percentage of the displayed group ratio versus the official price.
+ *
+ * Returns null when the displayed group offers no discount (ratio >= 1 or
+ * invalid), so callers can omit the badge entirely.
+ */
+export function getGroupDiscountPercent(
+  model: PricingModel,
+  selectedGroup?: string
+): number | null {
+  const ratio = getDisplayGroupRatio(model, selectedGroup)
+  if (!(ratio > 0) || ratio >= 1) {
+    return null
+  }
+  return Math.round((1 - ratio) * 100)
+}
+
+/**
  * Replace model placeholder in endpoint path
  */
 export function replaceModelInPath(path: string, modelName: string): string {

@@ -34,8 +34,6 @@ interface OnboardingStepItem {
   kvLabel: string
   kvValue: string
   kvTone: 'default' | 'blue' | 'emerald'
-  pills: [string, string, string]
-  pillTone: 'blue' | 'slate' | 'emerald'
   topBarClass: string
 }
 
@@ -47,8 +45,6 @@ const ONBOARDING_STEPS: OnboardingStepItem[] = [
     kvLabel: 'Credential Format',
     kvValue: 'Bearer sk-••••',
     kvTone: 'default',
-    pills: ['Universal', 'Quota Limits', 'IP Allowlist'],
-    pillTone: 'blue',
     topBarClass: 'from-blue-600 to-indigo-500',
   },
   {
@@ -58,8 +54,6 @@ const ONBOARDING_STEPS: OnboardingStepItem[] = [
     kvLabel: 'Endpoint URL',
     kvValue: DEFAULT_GATEWAY_ORIGIN,
     kvTone: 'blue',
-    pills: ['Anthropic Protocol', 'OpenAI Protocol', 'One-Click Import'],
-    pillTone: 'slate',
     topBarClass: 'from-cyan-500 to-blue-600',
   },
   {
@@ -69,8 +63,6 @@ const ONBOARDING_STEPS: OnboardingStepItem[] = [
     kvLabel: 'Response Mode',
     kvValue: 'SSE Stream / Sync JSON',
     kvTone: 'emerald',
-    pills: ['Fast TTFT', 'Real-time Tracking', 'Granular Logs'],
-    pillTone: 'emerald',
     topBarClass: 'from-emerald-500 to-teal-500',
   },
 ]
@@ -163,16 +155,6 @@ export function HowItWorks() {
                 'border-emerald-600/20 bg-emerald-50 text-emerald-600 dark:border-emerald-400/25 dark:bg-emerald-950/50 dark:text-emerald-400'
             }
 
-            let pillClass =
-              'bg-blue-600/[0.06] text-blue-600 dark:bg-blue-500/15 dark:text-blue-400'
-            if (step.pillTone === 'slate') {
-              pillClass =
-                'bg-[#F1F5F9] text-[#334155] dark:bg-zinc-800 dark:text-zinc-200'
-            } else if (step.pillTone === 'emerald') {
-              pillClass =
-                'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
-            }
-
             return (
               <AnimateInView
                 key={step.num}
@@ -255,20 +237,6 @@ export function HowItWorks() {
                         />
                       )}
                     </div>
-                  </div>
-
-                  <div className='flex flex-wrap items-center gap-1.5'>
-                    {step.pills.map((pill) => (
-                      <span
-                        key={pill}
-                        className={cn(
-                          'flex-1 min-w-fit rounded-md px-2.5 py-1 text-center text-[11px] font-semibold whitespace-nowrap',
-                          pillClass
-                        )}
-                      >
-                        {t(pill)}
-                      </span>
-                    ))}
                   </div>
                 </div>
               </AnimateInView>

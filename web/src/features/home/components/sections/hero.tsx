@@ -53,7 +53,7 @@ export function Hero(props: HeroProps) {
               <span className='size-1.5 shrink-0 rounded-full bg-emerald-600 shadow-[0_0_0_3px_rgba(5,150,105,0.16)]' />
               <span className='truncate'>
                 {t(
-                  'Official API direct connect · Flexible pricing · Real-time metering'
+                  'Official-plan API · Up to 93% off · Direct access in China'
                 )}
               </span>
             </div>
@@ -104,17 +104,10 @@ export function Hero(props: HeroProps) {
 
             {/* Interactive 5-Model Deck Selector */}
             <div className='border-t border-[#0F172A]/[0.08] pt-5 dark:border-white/10'>
-              <div className='mb-2.5 text-[12px] font-semibold text-[#64748B] dark:text-zinc-400'>
-                {t(
-                  'Click a model to view real-time rates and routing discounts'
-                )}
-              </div>
               <div
                 className='flex flex-wrap gap-2'
                 role='tablist'
-                aria-label={t(
-                  'Click a model to view real-time rates and routing discounts'
-                )}
+                aria-label={t('Model selector')}
               >
                 {HERO_DECK_MODELS.map((m, idx) => {
                   const isActive = idx === activeModelIdx

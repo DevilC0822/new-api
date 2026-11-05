@@ -26,6 +26,7 @@ import {
   within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import i18next from 'i18next'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createJSONStorage } from 'zustand/middleware'
 
@@ -88,6 +89,84 @@ afterEach(() => {
 })
 
 describe('model cards', () => {
+  it('shows the best group discount next to the model name when no group is selected', () => {
+    render(
+      <ModelCard
+        model={pricingModel({
+          enable_groups: ['default', 'vip'],
+          group_ratio: { default: 1, vip: 0.2 },
+        })}
+        onClick={vi.fn()}
+      />
+    )
+    const badge = screen.getByText('80% off').closest(
+      '[data-slot="status-badge"]'
+    )
+    expect(badge).toHaveAttribute('title', '80% below the official price')
+    const heading = screen.getByRole('heading', { name: 'example-model' })
+    expect(badge?.parentElement).toBe(heading.parentElement)
+    expect(
+      heading.compareDocumentPosition(badge as Node)
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(heading).not.toHaveClass('flex-1')
+  })
+
+  it('shows the selected group discount instead of the best one', () => {
+    render(
+      <ModelCard
+        model={pricingModel({
+          enable_groups: ['default', 'vip'],
+          group_ratio: { default: 1, vip: 0.15 },
+        })}
+        onClick={vi.fn()}
+        selectedGroup='vip'
+      />
+    )
+    expect(screen.getByText('85% off')).toBeVisible()
+  })
+
+  it('renders the Chinese zhe discount form for Chinese locales', async () => {
+    i18next.addResourceBundle(
+      'zhCN',
+      'translation',
+      {
+        '{{percent}}% off': '{{zhe}}折',
+        '{{percent}}% below the official price': '低至官方价格{{zhe}}折',
+      },
+      true,
+      true
+    )
+    await act(() => i18next.changeLanguage('zhCN'))
+    const vipRatio = (ratio: number) =>
+      pricingModel({
+        enable_groups: ['default', 'vip'],
+        group_ratio: { default: 1, vip: ratio },
+      })
+    const { unmount } = render(
+      <ModelCard model={vipRatio(0.2)} onClick={vi.fn()} />
+    )
+    expect(
+      screen.getByText('2折').closest('[data-slot="status-badge"]')
+    ).toHaveAttribute('title', '低至官方价格2折')
+    unmount()
+    render(<ModelCard model={vipRatio(0.07)} onClick={vi.fn()} />)
+    expect(screen.getByText('0.7折')).toBeVisible()
+    await act(() => i18next.changeLanguage('en'))
+  })
+
+  it('omits the discount badge when the displayed group has no discount', () => {
+    const model = pricingModel({
+      enable_groups: ['default', 'vip'],
+      group_ratio: { default: 1, vip: 0.2 },
+    })
+    const { rerender } = render(
+      <ModelCard model={model} onClick={vi.fn()} selectedGroup='default' />
+    )
+    expect(screen.queryByText(/% off/)).not.toBeInTheDocument()
+    rerender(<ModelCard model={model} onClick={vi.fn()} />)
+    expect(screen.getByText('80% off')).toBeVisible()
+  })
+
   it('shows separate generic and image cache prices including a free image cache', () => {
     render(
       <CachedPriceCell

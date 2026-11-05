@@ -37,11 +37,15 @@ import {
   isUnconfiguredTaskUsageModel,
 } from '../lib/dynamic-price'
 import { parseTags } from '../lib/filters'
-import { isTokenBasedModel } from '../lib/model-helpers'
+import {
+  getGroupDiscountPercent,
+  isTokenBasedModel,
+} from '../lib/model-helpers'
 import { formatPrice, formatRequestPrice } from '../lib/price'
 import { taskPriceLabel, taskUsageUnitLabel } from '../lib/task-price-display'
 import type { PricingModel, PriceType, TokenUnit } from '../types'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
+import { ModelDiscountBadge } from './model-discount-badge'
 import { ModelPerfBadge, type ModelPerfBadgeData } from './model-perf-badge'
 
 export interface ModelCardProps {
@@ -70,6 +74,10 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 28) : null
   const initial = props.model.model_name?.charAt(0).toUpperCase() || '?'
   const isUnconfiguredTaskUsage = isUnconfiguredTaskUsageModel(props.model)
+  const discountPercent = getGroupDiscountPercent(
+    props.model,
+    props.selectedGroup
+  )
   const billingTime = useBillingTime(props.model.billing_expr)
   const currency = useSystemConfigStore((state) => state.config.currency)
   const dynamicPriceOptions = useMemo(
@@ -280,12 +288,17 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
           )}
         </div>
         <div className='min-w-0 flex-1'>
-          <h3
-            className='line-clamp-2 font-mono text-[15px] leading-snug font-semibold [overflow-wrap:anywhere]'
-            title={props.model.model_name}
-          >
-            {props.model.model_name}
-          </h3>
+          <div className='flex items-start gap-1.5'>
+            <h3
+              className='line-clamp-2 min-w-0 font-mono text-[15px] leading-snug font-semibold [overflow-wrap:anywhere]'
+              title={props.model.model_name}
+            >
+              {props.model.model_name}
+            </h3>
+            {discountPercent != null && (
+              <ModelDiscountBadge percent={discountPercent} />
+            )}
+          </div>
           {props.model.vendor_name && (
             <p
               className='text-muted-foreground mt-1 truncate text-xs'

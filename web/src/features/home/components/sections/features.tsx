@@ -54,14 +54,6 @@ interface VendorClusterItem {
   yPos: number
 }
 
-interface StreamModelChip {
-  id: string
-  title: string
-  modelId: string
-  capability: string
-  accent: string
-}
-
 const CLIENT_ENTRY_NODES: ClientEntryNode[] = [
   {
     id: 'claude-code',
@@ -159,126 +151,6 @@ const VENDOR_CLUSTERS: VendorClusterItem[] = [
     yPos: 324,
   },
 ]
-
-const STREAM_ROW_TOP: StreamModelChip[] = [
-  {
-    id: 'claude-opus-5-5',
-    title: 'Claude Opus 5.5',
-    modelId: 'claude-opus-5-5',
-    capability: 'Architectural refactoring · Deep thinking',
-    accent: '#EA580C',
-  },
-  {
-    id: 'gpt-6-astra',
-    title: 'GPT-6 Astra',
-    modelId: 'gpt-6-astra',
-    capability: 'Multimodal reasoning · Complex planning',
-    accent: '#10B981',
-  },
-  {
-    id: 'deepseek-flash',
-    title: 'DeepSeek V4.1 Flash',
-    modelId: 'deepseek-flash',
-    capability: 'Low latency · High-concurrency streaming',
-    accent: '#2563EB',
-  },
-  {
-    id: 'glm-5.3',
-    title: 'GLM-5.3',
-    modelId: 'glm-5.3',
-    capability: 'Full-stack code generation · Native tool use',
-    accent: '#6366F1',
-  },
-  {
-    id: 'kimi-k3',
-    title: 'Kimi K3.1 Pro',
-    modelId: 'kimi-k3',
-    capability: 'Repository-scale retrieval · Cross-file analysis',
-    accent: '#0891B2',
-  },
-  {
-    id: 'claude-sonnet-5-5',
-    title: 'Claude Sonnet 5.5',
-    modelId: 'claude-sonnet-5-5',
-    capability: 'Daily coding workhorse · Balanced low latency',
-    accent: '#EA580C',
-  },
-]
-
-const STREAM_ROW_BOTTOM: StreamModelChip[] = [
-  {
-    id: 'gpt-6.1-sol',
-    title: 'GPT-6.1 Sol',
-    modelId: 'gpt-6.1-sol',
-    capability: 'Structured output · Agent orchestration',
-    accent: '#10B981',
-  },
-  {
-    id: 'deepseek-v4-pro',
-    title: 'DeepSeek V4 Pro',
-    modelId: 'deepseek-v4-pro',
-    capability: 'Math & algorithms · Deep chain-of-thought',
-    accent: '#2563EB',
-  },
-  {
-    id: 'claude-fable-5-1',
-    title: 'Claude Fable 5.1',
-    modelId: 'claude-fable-5-1',
-    capability: 'In-depth writing · Complex semantics',
-    accent: '#EA580C',
-  },
-  {
-    id: 'glm-5.3-flash',
-    title: 'GLM-5.3 Flash',
-    modelId: 'glm-5.3-flash',
-    capability: 'Lightweight real-time chat · Batch tasks',
-    accent: '#6366F1',
-  },
-  {
-    id: 'claude-haiku-5-5',
-    title: 'Claude Haiku 5.5',
-    modelId: 'claude-haiku-5-5',
-    capability: 'Fast code completion · Real-time extraction',
-    accent: '#EA580C',
-  },
-  {
-    id: 'gpt-6-luna',
-    title: 'GPT-6 Luna',
-    modelId: 'gpt-6-luna',
-    capability: 'High-throughput automation · Lightweight reasoning',
-    accent: '#10B981',
-  },
-]
-
-function ModelStreamCapsule(props: { item: StreamModelChip }) {
-  const { item } = props
-  const { t } = useTranslation()
-  return (
-    <Link
-      to='/pricing'
-      className='group mr-3.5 inline-flex shrink-0 items-center gap-3 rounded-full border border-[#0F172A]/[0.08] bg-white/95 py-2 pr-4 pl-3.5 shadow-[0_4px_14px_-4px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-600/30 hover:shadow-[0_10px_22px_-6px_rgba(37,99,235,0.12)] dark:border-white/10 dark:bg-zinc-900/90'
-    >
-      <span
-        className='size-2 shrink-0 rounded-full'
-        style={{
-          background: item.accent,
-          boxShadow: `0 0 8px ${item.accent}88`,
-        }}
-      />
-      <div className='flex items-baseline gap-2'>
-        <span className='text-[13px] font-bold text-[#0F172A] group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400'>
-          {item.title}
-        </span>
-        <span className='hidden font-mono text-[11px] text-[#94A3B8] sm:inline'>
-          {item.modelId}
-        </span>
-      </div>
-      <span className='rounded-full bg-[#F1F5F9] px-2.5 py-0.5 text-[11px] font-medium text-[#475569] dark:bg-zinc-800 dark:text-zinc-300'>
-        {t(item.capability)}
-      </span>
-    </Link>
-  )
-}
 
 export function Features(props: FeaturesProps) {
   const { t } = useTranslation()
@@ -561,52 +433,15 @@ export function Features(props: FeaturesProps) {
             </div>
           </div>
 
-          {/* Bottom Dual-Track Infinite Live Model Stream (12 Real Models) */}
-          <div className='relative z-10 border-t border-[#0F172A]/[0.07] bg-[#F8FAFC]/80 py-3 dark:border-white/10 dark:bg-zinc-950/60'>
-            <div className='mihouo-marquee-track space-y-2 overflow-hidden [mask-image:linear-gradient(90deg,transparent_0%,black_7%,black_93%,transparent_100%)] py-1.5'>
-              {/* Track 1: Scrolls Left */}
-              <div className='mihouo-marquee-left flex w-max flex-nowrap py-0.5'>
-                {(['a', 'b'] as const).map((copy) =>
-                  STREAM_ROW_TOP.map((item) => (
-                    <ModelStreamCapsule
-                      key={`t1-${copy}-${item.id}`}
-                      item={item}
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Track 2: Scrolls Right */}
-              <div className='mihouo-marquee-right flex w-max flex-nowrap py-0.5'>
-                {(['a', 'b'] as const).map((copy) =>
-                  STREAM_ROW_BOTTOM.map((item) => (
-                    <ModelStreamCapsule
-                      key={`t2-${copy}-${item.id}`}
-                      item={item}
-                    />
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Actions */}
         <div className='mt-8 flex flex-wrap items-center justify-center gap-3'>
           <Button
-            variant='outline'
-            className='h-10 rounded-full border border-[#0F172A]/14 bg-white px-5 text-[13px] font-semibold text-[#0F172A] shadow-[0_2px_6px_rgba(15,23,42,0.03)] transition-all hover:border-[#0F172A]/25 hover:bg-[#F8FAFC] dark:border-white/20 dark:bg-zinc-900 dark:text-zinc-100'
-            render={<Link to='/rankings' />}
-          >
-            {t('View Model Rankings')}
-          </Button>
-          <Button
             className='group h-10 rounded-full border border-[#0F172A] bg-[#0F172A] px-6 text-[13px] font-semibold text-white shadow-[0_6px_16px_-4px_rgba(15,23,42,0.2)] transition-all hover:-translate-y-px hover:bg-[#1E293B] dark:border-white dark:bg-white dark:text-[#0F172A]'
             render={<Link to='/pricing' />}
           >
-            <span>
-              {t('View all 12 models and pricing rules in Model Square')}
-            </span>
+            <span>{t('Explore Model Square')}</span>
             <ArrowRight className='ml-1.5 size-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
           </Button>
         </div>

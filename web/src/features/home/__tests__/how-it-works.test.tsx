@@ -58,7 +58,7 @@ async function renderWithRouter(ui: React.ReactNode) {
 }
 
 describe('Homepage sections (confirmed MIHOUO · 觅火 design)', () => {
-  test('renders 3-step quickstart cards with aligned single-line scope pills and gateway origin', async () => {
+  test('renders 3-step quickstart cards with gateway origin and interactive snippets', async () => {
     await renderWithRouter(<HowItWorks />)
 
     expect(screen.getByText('Create an API Key')).toBeInTheDocument()
@@ -67,9 +67,6 @@ describe('Homepage sections (confirmed MIHOUO · 觅火 design)', () => {
     expect(screen.getAllByText(DEFAULT_GATEWAY_ORIGIN).length).toBeGreaterThan(
       0
     )
-    expect(screen.getByText('Anthropic Protocol')).toBeInTheDocument()
-    expect(screen.getByText('OpenAI Protocol')).toBeInTheDocument()
-    expect(screen.getByText('One-Click Import')).toBeInTheDocument()
 
     const codexBtn = screen.getByRole('button', { name: 'Codex CLI' })
     fireEvent.click(codexBtn)
@@ -122,10 +119,10 @@ describe('Homepage sections (confirmed MIHOUO · 觅火 design)', () => {
       screen.getByText('Auto routing -> Zhipu GLM channel')
     ).toBeInTheDocument()
 
-    expect(screen.getAllByText('Claude Opus 5.5').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('GPT-6 Astra').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('DeepSeek V4.1 Flash').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Kimi K3.1 Pro').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Opus 5\.5 · Sonnet 5\.5/)).toBeInTheDocument()
+    expect(screen.getByText(/GPT-6 Astra · GPT-6\.1 Sol/)).toBeInTheDocument()
+    expect(screen.getByText(/DeepSeek V4 Pro/)).toBeInTheDocument()
+    expect(screen.getByText(/Kimi K3\.1 Pro/)).toBeInTheDocument()
   })
 
   test('switches active hero deck card when clicking left model chips or background cards', async () => {

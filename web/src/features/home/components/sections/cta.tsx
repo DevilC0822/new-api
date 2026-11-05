@@ -59,10 +59,8 @@ export function CTA(props: CTAProps) {
             <h2 className='mb-3 text-[clamp(1.75rem,2.6vw,2.35rem)] leading-[1.2] font-extrabold tracking-[-0.025em] text-[#0F172A] dark:text-white'>
               {t('Start Using {{name}} Today', { name: displayName })}
             </h2>
-            <p className='mx-auto mb-7 max-w-[480px] text-[15px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
-              {t(
-                'Sign up to generate an API key and connect your existing development tools and applications to flagship models seamlessly.'
-              )}
+            <p className='mx-auto mb-7 max-w-[520px] text-[15px] leading-[1.68] text-[#64748B] dark:text-zinc-400'>
+              {t('Alipay top-up · Pay-as-you-go · No minimum spend')}
             </p>
 
             <div className='flex flex-wrap items-center justify-center gap-3'>
@@ -78,13 +76,6 @@ export function CTA(props: CTAProps) {
                   {props.isAuthenticated ? t('Go to Dashboard') : t('Sign up')}
                 </span>
                 <ArrowRight className='ml-1.5 size-4 transition-transform duration-200 group-hover:translate-x-0.5' />
-              </Button>
-              <Button
-                variant='outline'
-                className='h-11 rounded-full border border-[#0F172A]/14 bg-white px-7 text-[14px] font-semibold text-[#0F172A] shadow-[0_2px_6px_rgba(15,23,42,0.03)] transition-all hover:border-[#0F172A]/25 hover:bg-[#F8FAFC] dark:border-white/20 dark:bg-zinc-900 dark:text-zinc-100'
-                render={<Link to='/pricing' />}
-              >
-                {t('Explore Model Square')}
               </Button>
             </div>
           </div>
