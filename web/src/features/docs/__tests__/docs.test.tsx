@@ -92,6 +92,10 @@ describe('Docs page behavior and interactive workbenches', () => {
     expect(
       screen.getByRole('heading', { name: 'Integration Docs' })
     ).toBeInTheDocument()
+    // The decorative DEVELOPER DOCUMENTATION eyebrow above the H1 was removed
+    expect(
+      screen.queryByText('DEVELOPER DOCUMENTATION')
+    ).not.toBeInTheDocument()
     expect(
       screen.getAllByText('https://api.mihouo.com').length
     ).toBeGreaterThan(0)
@@ -176,5 +180,12 @@ describe('Docs page behavior and interactive workbenches', () => {
         name: 'Open Source Ecosystem & Attribution',
       })
     ).toBeInTheDocument()
+    // AGPL attribution links to the upstream project are preserved
+    expect(
+      screen.getByText('github.com/QuantumNous/new-api')
+    ).toBeInTheDocument()
+    // The pseudo-metric strip and ABOUT eyebrow badge were removed
+    expect(screen.queryByText('Minimal Latency')).not.toBeInTheDocument()
+    expect(screen.queryByText('Zero Retention')).not.toBeInTheDocument()
   })
 })

@@ -48,22 +48,12 @@ export function Hero(props: HeroProps) {
         <div className='grid grid-cols-1 items-center gap-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:gap-14'>
           {/* Left Column */}
           <div className='min-w-0'>
-            {/* Top Status Badge */}
-            <div className='mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-blue-600/18 bg-blue-600/[0.06] px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.02em] text-blue-600 dark:border-blue-400/25 dark:bg-blue-500/10 dark:text-blue-400'>
-              <span className='size-1.5 shrink-0 rounded-full bg-emerald-600 shadow-[0_0_0_3px_rgba(5,150,105,0.16)]' />
-              <span className='truncate'>
-                {t(
-                  'Official-plan API · Up to 93% off · Direct access in China'
-                )}
-              </span>
-            </div>
-
             {/* Responsive Balanced Headline */}
             <h1 className='mb-5 text-[clamp(2.1rem,3.4vw,3.25rem)] leading-[1.18] font-bold tracking-[-0.03em] text-[#0F172A] dark:text-white'>
-              <span className='block break-words'>
+              <span className='block text-balance break-words'>
                 {t('Built for Engineering & Production')}
               </span>
-              <span className='block bg-[linear-gradient(125deg,#0F172A_0%,#2563EB_55%,#0891B2_100%)] bg-clip-text break-words text-transparent dark:bg-[linear-gradient(125deg,#FFFFFF_0%,#60A5FA_55%,#22D3EE_100%)]'>
+              <span className='block bg-[linear-gradient(125deg,#0F172A_0%,#2563EB_55%,#0891B2_100%)] bg-clip-text text-balance break-words text-transparent dark:bg-[linear-gradient(125deg,#FFFFFF_0%,#60A5FA_55%,#22D3EE_100%)]'>
                 {t('Unified LLM Gateway')}
               </span>
             </h1>

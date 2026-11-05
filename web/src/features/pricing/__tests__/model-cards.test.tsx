@@ -99,15 +99,15 @@ describe('model cards', () => {
         onClick={vi.fn()}
       />
     )
-    const badge = screen.getByText('80% off').closest(
-      '[data-slot="status-badge"]'
-    )
+    const badge = screen
+      .getByText('80% off')
+      .closest('[data-slot="status-badge"]')
     expect(badge).toHaveAttribute('title', '80% below the official price')
     const heading = screen.getByRole('heading', { name: 'example-model' })
     expect(badge?.parentElement).toBe(heading.parentElement)
-    expect(
-      heading.compareDocumentPosition(badge as Node)
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(heading.compareDocumentPosition(badge as Node)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
     expect(heading).not.toHaveClass('flex-1')
   })
 

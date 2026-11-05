@@ -64,27 +64,40 @@ describe('Homepage sections (confirmed MIHOUO · 觅火 design)', () => {
     expect(screen.getByText('Create an API Key')).toBeInTheDocument()
     expect(screen.getByText('Configure Endpoint or Import')).toBeInTheDocument()
     expect(screen.getByText('Start Calling & Monitor Logs')).toBeInTheDocument()
-    expect(screen.getAllByText(DEFAULT_GATEWAY_ORIGIN).length).toBeGreaterThan(
-      0
-    )
+    // The gateway origin is user-visible inside the copyable snippet code
+    expect(
+      screen.getAllByText((content) => content.includes(DEFAULT_GATEWAY_ORIGIN))
+        .length
+    ).toBeGreaterThan(0)
+
+    // Step numbers render once (badge only); no duplicate STEP labels or
+    // decorative KV footer labels from the earlier design
+    expect(screen.queryByText('STEP 01')).not.toBeInTheDocument()
+    expect(screen.queryByText('Credential Format')).not.toBeInTheDocument()
 
     const codexBtn = screen.getByRole('button', { name: 'Codex CLI' })
     fireEvent.click(codexBtn)
     expect(screen.getByText(/codex --model gpt-6-astra/)).toBeInTheDocument()
   })
 
-  test('switches protocol endpoints interactively in Stats engineering pillars', async () => {
+  test('renders engineering pillars with endpoint list and governance facts', async () => {
     await renderWithRouter(<Stats />)
 
-    expect(screen.getByText('Anthropic Native Protocol')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '/v1/responses' }))
-    expect(screen.getByText('OpenAI Responses Protocol')).toBeInTheDocument()
     expect(
       screen.getByText('Multi-Dimensional Token Metering & Real-Time Tracing')
     ).toBeInTheDocument()
     expect(
       screen.getByText('Memory Streaming & Team Token Governance')
     ).toBeInTheDocument()
+    expect(
+      screen.getByText('/v1/messages · /v1/responses · /v1/chat/completions')
+    ).toBeInTheDocument()
+    // The teaser paragraph that previewed the three pillars was removed
+    expect(
+      screen.queryByText(
+        'From dual-protocol passthrough and granular token metering to privacy governance, built for production standards.'
+      )
+    ).not.toBeInTheDocument()
   })
 
   test('renders the smart routing convergence stage and updates the active route rule when hovering vendor clusters', async () => {
@@ -123,6 +136,12 @@ describe('Homepage sections (confirmed MIHOUO · 觅火 design)', () => {
     expect(screen.getByText(/GPT-6 Astra · GPT-6\.1 Sol/)).toBeInTheDocument()
     expect(screen.getByText(/DeepSeek V4 Pro/)).toBeInTheDocument()
     expect(screen.getByText(/Kimi K3\.1 Pro/)).toBeInTheDocument()
+
+    // No stale hardcoded model-count slogan or per-cluster count chips
+    expect(
+      screen.queryByText('12 Flagship Models Online')
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('4 Models')).not.toBeInTheDocument()
   })
 
   test('switches active hero deck card when clicking left model chips or background cards', async () => {

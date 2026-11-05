@@ -73,10 +73,7 @@ export function PriceCompare() {
     const withPrices: PriceRow[] = []
     for (const model of merged) {
       const official = primaryPrices(model, 1)
-      const site = primaryPrices(
-        model,
-        getDynamicDisplayGroupRatio(model)
-      )
+      const site = primaryPrices(model, getDynamicDisplayGroupRatio(model))
       if (!official || !site) continue
       const summary = getDynamicPricingSummary(model, { tokenUnit: 'M' })
       withPrices.push({
@@ -108,17 +105,9 @@ export function PriceCompare() {
     <section className='relative z-10 border-t border-[#0F172A]/[0.08] py-20 dark:border-white/10'>
       <div className='mx-auto max-w-[1220px] px-6'>
         <AnimateInView className='mb-10 text-center'>
-          <div className='mb-2.5 inline-flex items-center gap-2 font-mono text-[11.5px] font-semibold tracking-[0.14em] text-blue-600 uppercase dark:text-blue-400'>
-            PRICING
-          </div>
           <h2 className='text-[clamp(1.85rem,3vw,2.6rem)] leading-[1.18] font-extrabold tracking-[-0.03em] text-[#0F172A] dark:text-white'>
             {t('Official Price vs Our Price')}
           </h2>
-          <p className='mx-auto mt-3.5 max-w-[560px] text-[15px] leading-[1.75] text-[#64748B] dark:text-zinc-400'>
-            {t(
-              'Same official endpoints, same quality — at a fraction of the price.'
-            )}
-          </p>
           <div className='mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-600/25 bg-emerald-500/[0.07] px-4 py-2 text-[13px] font-semibold text-emerald-700 dark:text-emerald-400'>
             <ShieldCheck aria-hidden className='size-4 shrink-0' />
             <span>

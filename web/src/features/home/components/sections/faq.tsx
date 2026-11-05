@@ -56,9 +56,6 @@ export function FAQ() {
     <section className='relative z-10 border-t border-[#0F172A]/[0.08] py-20 dark:border-white/10'>
       <div className='mx-auto max-w-[760px] px-6'>
         <AnimateInView className='mb-9 text-center'>
-          <div className='mb-2.5 inline-flex items-center gap-2 font-mono text-[11.5px] font-semibold tracking-[0.14em] text-blue-600 uppercase dark:text-blue-400'>
-            FAQ
-          </div>
           <h2 className='text-[clamp(1.75rem,2.6vw,2.35rem)] leading-[1.2] font-extrabold tracking-[-0.025em] text-[#0F172A] dark:text-white'>
             {t('Frequently Asked Questions')}
           </h2>

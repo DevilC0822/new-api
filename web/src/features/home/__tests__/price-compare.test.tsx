@@ -28,6 +28,7 @@ import {
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+import type { PricingData } from '@/features/pricing/types'
 import { api } from '@/lib/api'
 import {
   DEFAULT_CURRENCY_CONFIG,
@@ -35,7 +36,6 @@ import {
 } from '@/stores/system-config-store'
 
 import { PriceCompare } from '../components/sections/price-compare'
-import type { PricingData } from '@/features/pricing/types'
 
 function pricingFixture(): PricingData {
   return {
@@ -116,6 +116,8 @@ describe('homepage price comparison section', () => {
         'All models come from official plans — 100% genuine, never watered down'
       )
     ).toBeInTheDocument()
+    // The decorative PRICING eyebrow above the H2 was removed
+    expect(screen.queryByText('PRICING')).not.toBeInTheDocument()
     // Models without expression pricing are omitted from the table
     expect(screen.queryByText('plain-model')).not.toBeInTheDocument()
   })

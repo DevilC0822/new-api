@@ -17,13 +17,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Logo } from '@/assets/logo'
 import { AnimateInView } from '@/components/animate-in-view'
-import { Button } from '@/components/ui/button'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { DEFAULT_SYSTEM_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -45,11 +43,8 @@ interface VendorClusterItem {
   id: string
   vendor: string
   modelsSummary: string
-  modelCount: string
-  capabilityTag: string
   routeRule: string
   accent: string
-  softBg: string
   borderActive: string
   yPos: number
 }
@@ -94,11 +89,8 @@ const VENDOR_CLUSTERS: VendorClusterItem[] = [
     id: 'anthropic',
     vendor: 'Anthropic Claude',
     modelsSummary: 'Opus 5.5 · Sonnet 5.5 · Fable 5.1 · Haiku 5.5',
-    modelCount: '4 Models',
-    capabilityTag: 'Deep thinking · Flagship coding',
     routeRule: 'Auto routing -> Anthropic channel',
     accent: '#EA580C',
-    softBg: 'rgba(234, 88, 12, 0.08)',
     borderActive: 'rgba(234, 88, 12, 0.45)',
     yPos: 36,
   },
@@ -106,11 +98,8 @@ const VENDOR_CLUSTERS: VendorClusterItem[] = [
     id: 'openai',
     vendor: 'OpenAI GPT',
     modelsSummary: 'GPT-6 Astra · GPT-6.1 Sol · GPT-6 Luna',
-    modelCount: '3 Models',
-    capabilityTag: 'Multimodal · Complex reasoning',
     routeRule: 'Auto routing -> OpenAI channel',
     accent: '#10B981',
-    softBg: 'rgba(16, 185, 129, 0.08)',
     borderActive: 'rgba(16, 185, 129, 0.45)',
     yPos: 108,
   },
@@ -118,11 +107,8 @@ const VENDOR_CLUSTERS: VendorClusterItem[] = [
     id: 'deepseek',
     vendor: 'DeepSeek',
     modelsSummary: 'DeepSeek V4 Pro · DeepSeek V4.1 Flash',
-    modelCount: '2 Models',
-    capabilityTag: 'Chain of thought · Fast generation',
     routeRule: 'Auto routing -> DeepSeek channel',
     accent: '#2563EB',
-    softBg: 'rgba(37, 99, 235, 0.08)',
     borderActive: 'rgba(37, 99, 235, 0.45)',
     yPos: 180,
   },
@@ -130,11 +116,8 @@ const VENDOR_CLUSTERS: VendorClusterItem[] = [
     id: 'glm',
     vendor: 'Zhipu GLM',
     modelsSummary: 'GLM-5.3 · GLM-5.3 Flash',
-    modelCount: '2 Models',
-    capabilityTag: 'Full-stack engineering · Tool use',
     routeRule: 'Auto routing -> Zhipu GLM channel',
     accent: '#6366F1',
-    softBg: 'rgba(99, 102, 241, 0.08)',
     borderActive: 'rgba(99, 102, 241, 0.45)',
     yPos: 252,
   },
@@ -142,11 +125,8 @@ const VENDOR_CLUSTERS: VendorClusterItem[] = [
     id: 'kimi',
     vendor: 'Moonshot Kimi',
     modelsSummary: 'Kimi K3.1 Pro (Long Context)',
-    modelCount: 'Long reasoning',
-    capabilityTag: 'Million context · Deep retrieval',
     routeRule: 'Auto routing -> Moonshot Kimi channel',
     accent: '#0891B2',
-    softBg: 'rgba(8, 145, 178, 0.08)',
     borderActive: 'rgba(8, 145, 178, 0.45)',
     yPos: 324,
   },
@@ -180,10 +160,7 @@ export function Features(props: FeaturesProps) {
       <div className='mx-auto max-w-[1220px] px-6'>
         {/* Centered Section Header */}
         <AnimateInView className='mb-12 text-center'>
-          <div className='mb-2.5 inline-flex items-center gap-2 font-mono text-[11.5px] font-semibold tracking-[0.14em] text-blue-600 uppercase dark:text-blue-400'>
-            UNIFIED MODEL ROUTER
-          </div>
-          <h2 className='text-[clamp(1.85rem,3vw,2.6rem)] leading-[1.18] font-extrabold tracking-[-0.03em] text-[#0F172A] dark:text-white'>
+          <h2 className='text-[clamp(1.85rem,3vw,2.6rem)] leading-[1.18] font-extrabold tracking-[-0.03em] text-balance text-[#0F172A] dark:text-white'>
             {t('Flagship Power from Top Providers, Unified in One Key')}
           </h2>
           <p className='mx-auto mt-3.5 max-w-[650px] text-[15px] leading-[1.75] text-[#64748B] dark:text-zinc-400'>
@@ -209,12 +186,9 @@ export function Features(props: FeaturesProps) {
           <div className='relative z-10 grid grid-cols-1 items-center gap-8 p-6 sm:p-8 lg:grid-cols-12 lg:gap-0 lg:px-9 lg:py-10'>
             {/* Column 1 (Left): 4 Developer Client & Protocol Entry Nodes */}
             <div className='flex flex-col justify-between gap-3.5 lg:col-span-4 lg:pr-2'>
-              <div className='mb-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 px-1'>
+              <div className='mb-1 px-1'>
                 <span className='font-mono text-[11px] font-bold tracking-[0.08em] text-[#64748B] uppercase dark:text-zinc-400'>
                   {t('01 · Clients & Request Entries')}
-                </span>
-                <span className='font-mono text-[11px] font-semibold text-blue-600 dark:text-blue-400'>
-                  {t('Anthropic & OpenAI Dual Protocols')}
                 </span>
               </div>
 
@@ -367,12 +341,9 @@ export function Features(props: FeaturesProps) {
 
             {/* Column 3 (Right): 5 Flagship Vendor Clusters */}
             <div className='flex flex-col justify-between gap-2.5 lg:col-span-4 lg:pl-2'>
-              <div className='mb-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1 px-1'>
+              <div className='mb-1 px-1'>
                 <span className='font-mono text-[11px] font-bold tracking-[0.08em] text-[#64748B] uppercase dark:text-zinc-400'>
-                  {t('02 · Flagship Model Pools (Hover to switch)')}
-                </span>
-                <span className='font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400'>
-                  {t('12 Flagship Models Online')}
+                  {t('02 · Flagship Model Pools')}
                 </span>
               </div>
 
@@ -407,43 +378,16 @@ export function Features(props: FeaturesProps) {
                         <span className='truncate text-[13.5px] font-bold text-[#0F172A] dark:text-white'>
                           {cluster.vendor}
                         </span>
-                        <span className='shrink-0 rounded-full bg-[#F1F5F9] px-2 py-px font-mono text-[10px] font-semibold text-[#64748B] dark:bg-zinc-800 dark:text-zinc-400'>
-                          {t(cluster.modelCount)}
-                        </span>
                       </div>
                       <div className='mt-0.5 truncate pl-4 font-mono text-[11px] text-[#64748B] dark:text-zinc-400'>
                         {cluster.modelsSummary}
                       </div>
-                    </div>
-
-                    <div className='shrink-0 text-right'>
-                      <span
-                        className='inline-block max-w-[140px] truncate rounded-full px-2.5 py-1 font-mono text-[10.5px] font-bold'
-                        style={{
-                          background: cluster.softBg,
-                          color: cluster.accent,
-                        }}
-                      >
-                        {t(cluster.capabilityTag)}
-                      </span>
                     </div>
                   </Link>
                 )
               })}
             </div>
           </div>
-
-        </div>
-
-        {/* Bottom Actions */}
-        <div className='mt-8 flex flex-wrap items-center justify-center gap-3'>
-          <Button
-            className='group h-10 rounded-full border border-[#0F172A] bg-[#0F172A] px-6 text-[13px] font-semibold text-white shadow-[0_6px_16px_-4px_rgba(15,23,42,0.2)] transition-all hover:-translate-y-px hover:bg-[#1E293B] dark:border-white dark:bg-white dark:text-[#0F172A]'
-            render={<Link to='/pricing' />}
-          >
-            <span>{t('Explore Model Square')}</span>
-            <ArrowRight className='ml-1.5 size-3.5 transition-transform duration-200 group-hover:translate-x-0.5' />
-          </Button>
         </div>
       </div>
     </section>

@@ -234,21 +234,8 @@ export function HeroTerminalDemo(props: HeroTerminalDemoProps) {
                 style={{ background: m.accent }}
               />
 
-              {/* Card Top Meta */}
-              <div className='mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1'>
-                <span
-                  className='truncate font-mono text-[11px] font-semibold tracking-[0.04em]'
-                  style={{ color: m.color }}
-                >
-                  {t(m.proto)}
-                </span>
-                <span className='shrink-0 rounded-full border border-emerald-600/15 bg-emerald-50 px-2 py-0.5 font-mono text-[10.5px] font-semibold whitespace-nowrap text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'>
-                  {t(m.badge)}
-                </span>
-              </div>
-
               {/* Model Title & ID */}
-              <div className='mb-2 flex items-baseline justify-between gap-2.5'>
+              <div className='mt-1 mb-2 flex items-baseline justify-between gap-2.5'>
                 <div className='text-[25px] leading-[1.2] font-bold tracking-[-0.025em] text-[#0F172A] dark:text-white'>
                   {m.name}
                 </div>

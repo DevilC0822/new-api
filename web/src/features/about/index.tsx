@@ -36,41 +36,26 @@ import { useAuthStore } from '@/stores/auth-store'
 import { getAboutContent } from './api'
 
 interface EngineeringPillar {
-  num: string
-  tag: string
   title: string
   description: string
 }
 
 const ENGINEERING_PILLARS: EngineeringPillar[] = [
   {
-    num: '01',
-    tag: 'PROTOCOL FIDELITY',
     title: 'Native Dual-Protocol Fidelity',
     description:
       'Native handling for Anthropic /v1/messages and OpenAI-compatible formats. Full support for extended thinking, prompt caching segments, and multi-tool calls without lossy conversion.',
   },
   {
-    num: '02',
-    tag: 'MESH RESILIENCE',
     title: 'Intelligent Routing & Failover',
     description:
       'Monitors upstream channel latency and health status in real time. Automatically retries alternate standby channels upon rate limits or upstream errors before streaming begins.',
   },
   {
-    num: '03',
-    tag: 'GRANULAR LEDGER',
     title: 'Transparent Billing & Zero Retention',
     description:
       'Settled accurately according to official usage tokens, with prompt cache read discounts passed through. Stateless streaming directly through memory with zero prompt persistence.',
   },
-]
-
-const KEY_METRICS = [
-  { label: 'Relay Overhead', value: 'Minimal Latency' },
-  { label: 'High Availability', value: 'Multi-Channel Standby' },
-  { label: 'Cache Read Discount', value: '0.1x (90% off)' },
-  { label: 'Prompt Storage', value: 'Zero Retention' },
 ]
 
 function MihouoAboutShowcase() {
@@ -94,17 +79,9 @@ function MihouoAboutShowcase() {
       {/* Hero: Manifesto & Core Metric Strip */}
       <section className='relative border-b border-[#0F172A]/[0.08] pt-24 pb-12 md:pt-28 md:pb-16 dark:border-white/10'>
         <div className='mx-auto max-w-[1280px] px-6 md:px-10'>
-          <div className='max-w-3xl'>
-            <div className='mb-3 inline-flex items-center gap-2 rounded-full border border-blue-600/18 bg-blue-600/[0.06] px-3 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] text-blue-600 uppercase dark:border-blue-400/25 dark:bg-blue-500/10 dark:text-blue-400'>
-              <span className='size-1.5 rounded-full bg-blue-600 dark:bg-blue-400' />
-              <span>{t('ABOUT {{name}}', { name: displayName })}</span>
-            </div>
-
-            <h1 className='text-[clamp(2.1rem,3.8vw,3.2rem)] leading-[1.18] font-extrabold tracking-[-0.03em] text-[#0F172A] dark:text-white'>
+          <div className='max-w-4xl'>
+            <h1 className='text-[clamp(2.1rem,3.8vw,3.2rem)] leading-[1.18] font-extrabold tracking-[-0.03em] text-balance text-[#0F172A] dark:text-white'>
               {t('Passing the Torch: Resilient AI Gateway Infrastructure')}
-              <span className='mt-1.5 block bg-[linear-gradient(125deg,#0F172A_0%,#2563EB_55%,#0891B2_100%)] bg-clip-text text-[0.82em] font-extrabold text-transparent dark:bg-[linear-gradient(125deg,#FFFFFF_0%,#60A5FA_55%,#22D3EE_100%)]'>
-                {t('Built for next-generation intelligence engineering')}
-              </span>
             </h1>
 
             <p className='mt-4 text-[14.5px] leading-[1.8] text-[#64748B] dark:text-zinc-300'>
@@ -142,23 +119,6 @@ function MihouoAboutShowcase() {
               </Button>
             </div>
           </div>
-
-          {/* 4-Metric Clean Hardware Strip */}
-          <div className='mt-10 grid grid-cols-2 gap-3 md:grid-cols-4'>
-            {KEY_METRICS.map((m) => (
-              <div
-                key={m.label}
-                className='rounded-[16px] border border-[#0F172A]/[0.08] bg-white p-4 shadow-2xs dark:border-white/10 dark:bg-zinc-900'
-              >
-                <div className='font-mono text-[11px] font-semibold text-[#64748B] dark:text-zinc-400'>
-                  {t(m.label)}
-                </div>
-                <div className='mt-1 text-[16px] font-extrabold tracking-tight text-[#0F172A] dark:text-white'>
-                  {t(m.value)}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -166,9 +126,6 @@ function MihouoAboutShowcase() {
       <section className='py-12 md:py-16'>
         <div className='mx-auto max-w-[1280px] px-6 md:px-10'>
           <div className='mb-8'>
-            <div className='mb-1.5 font-mono text-[11px] font-semibold tracking-[0.14em] text-blue-600 uppercase dark:text-blue-400'>
-              01 / ENGINEERING PILLARS
-            </div>
             <h2 className='text-[22px] font-bold tracking-tight text-[#0F172A] md:text-[26px] dark:text-white'>
               {t('Core Engineering Principles')}
             </h2>
@@ -177,28 +134,17 @@ function MihouoAboutShowcase() {
           <div className='grid grid-cols-1 gap-5 md:grid-cols-3'>
             {ENGINEERING_PILLARS.map((pillar, idx) => (
               <AnimateInView
-                key={pillar.num}
+                key={pillar.title}
                 delay={idx * 60}
                 animation='fade-up'
-                className='flex flex-col justify-between rounded-[20px] border border-[#0F172A]/[0.08] bg-white p-6 shadow-[0_12px_28px_-14px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-zinc-900'
+                className='rounded-[20px] border border-[#0F172A]/[0.08] bg-white p-6 shadow-[0_12px_28px_-14px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-zinc-900'
               >
-                <div>
-                  <div className='mb-4 flex items-center justify-between border-b border-[#0F172A]/[0.06] pb-3 dark:border-white/10'>
-                    <span className='font-mono text-lg font-bold text-blue-600 dark:text-blue-400'>
-                      {pillar.num}
-                    </span>
-                    <span className='rounded-full border border-[#0F172A]/[0.08] bg-[#F8FAFC] px-2.5 py-0.5 font-mono text-[10.5px] font-semibold text-[#475569] dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-300'>
-                      {pillar.tag}
-                    </span>
-                  </div>
-
-                  <h3 className='text-[17px] font-bold text-[#0F172A] dark:text-white'>
-                    {t(pillar.title)}
-                  </h3>
-                  <p className='mt-2.5 text-[13px] leading-[1.7] text-[#64748B] dark:text-zinc-400'>
-                    {t(pillar.description)}
-                  </p>
-                </div>
+                <h3 className='text-[17px] font-bold text-[#0F172A] dark:text-white'>
+                  {t(pillar.title)}
+                </h3>
+                <p className='mt-2.5 text-[13px] leading-[1.7] text-[#64748B] dark:text-zinc-400'>
+                  {t(pillar.description)}
+                </p>
               </AnimateInView>
             ))}
           </div>
@@ -209,68 +155,53 @@ function MihouoAboutShowcase() {
       <section className='border-t border-[#0F172A]/[0.08] py-12 md:py-16 dark:border-white/10'>
         <div className='mx-auto max-w-[1280px] px-6 md:px-10'>
           <div className='rounded-[22px] border border-[#0F172A]/[0.08] bg-white p-6 shadow-[0_14px_34px_-16px_rgba(15,23,42,0.05)] md:p-8 dark:border-white/10 dark:bg-zinc-900'>
-            <div className='flex flex-col justify-between gap-6 md:flex-row md:items-center'>
-              <div className='max-w-2xl'>
-                <div className='mb-1.5 font-mono text-[11px] font-semibold tracking-[0.14em] text-blue-600 uppercase dark:text-blue-400'>
-                  02 / OPEN ECOSYSTEM &amp; LICENSE
-                </div>
-                <h3 className='text-[20px] font-bold text-[#0F172A] dark:text-white'>
-                  {t('Open Source Ecosystem & Attribution')}
-                </h3>
-                <p className='mt-2 text-[13px] leading-[1.7] text-[#64748B] dark:text-zinc-400'>
-                  {t(
-                    '{{name}} architecture builds upon excellent open-source AI gateway engineering practices, licensed under AGPL v3.0, providing developers with a standardized and verifiable dual-protocol experience.',
-                    { name: displayName }
-                  )}
-                </p>
+            <div className='max-w-2xl'>
+              <h3 className='text-[20px] font-bold text-[#0F172A] dark:text-white'>
+                {t('Open Source Ecosystem & Attribution')}
+              </h3>
+              <p className='mt-2 text-[13px] leading-[1.7] text-[#64748B] dark:text-zinc-400'>
+                {t(
+                  '{{name}} architecture builds upon excellent open-source AI gateway engineering practices, licensed under AGPL v3.0, providing developers with a standardized and verifiable dual-protocol experience.',
+                  { name: displayName }
+                )}
+              </p>
 
-                <div className='mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[#64748B] dark:text-zinc-400'>
-                  <div>
-                    {t('Repository:')}{' '}
-                    <a
-                      href='https://github.com/QuantumNous/new-api'
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='font-semibold text-blue-600 underline-offset-4 hover:underline dark:text-blue-400'
-                    >
-                      github.com/QuantumNous/new-api
-                    </a>
-                  </div>
-                  <span>·</span>
-                  <div>
-                    {t('License:')}{' '}
-                    <a
-                      href='https://github.com/QuantumNous/new-api/blob/main/LICENSE'
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='font-semibold text-blue-600 underline-offset-4 hover:underline dark:text-blue-400'
-                    >
-                      AGPL v3.0 License
-                    </a>
-                  </div>
-                  <span>·</span>
-                  <div>
-                    {t('Foundational Tribute:')}{' '}
-                    <a
-                      href='https://github.com/songquanpeng/one-api'
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='font-semibold text-[#0F172A] hover:underline dark:text-white'
-                    >
-                      One API
-                    </a>
-                  </div>
+              <div className='mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-[#64748B] dark:text-zinc-400'>
+                <div>
+                  {t('Repository:')}{' '}
+                  <a
+                    href='https://github.com/QuantumNous/new-api'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='font-semibold text-blue-600 underline-offset-4 hover:underline dark:text-blue-400'
+                  >
+                    github.com/QuantumNous/new-api
+                  </a>
                 </div>
-              </div>
-
-              <div className='flex shrink-0 items-center gap-3'>
-                <Link
-                  to='/docs'
-                  className='inline-flex items-center gap-1.5 rounded-full bg-[#0F172A] px-5 py-2.5 text-xs font-semibold text-white transition-opacity hover:opacity-90 dark:bg-white dark:text-[#0F172A]'
-                >
-                  <span>{t('Get Started')}</span>
-                  <ArrowRight className='size-3.5' />
-                </Link>
+                <span>·</span>
+                <div>
+                  {t('License:')}{' '}
+                  <a
+                    href='https://github.com/QuantumNous/new-api/blob/main/LICENSE'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='font-semibold text-blue-600 underline-offset-4 hover:underline dark:text-blue-400'
+                  >
+                    AGPL v3.0 License
+                  </a>
+                </div>
+                <span>·</span>
+                <div>
+                  {t('Foundational Tribute:')}{' '}
+                  <a
+                    href='https://github.com/songquanpeng/one-api'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='font-semibold text-[#0F172A] hover:underline dark:text-white'
+                  >
+                    One API
+                  </a>
+                </div>
               </div>
             </div>
           </div>

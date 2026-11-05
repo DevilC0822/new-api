@@ -26,7 +26,15 @@ import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
-import { CTA, FAQ, Features, Hero, HowItWorks, PriceCompare, Stats } from './components'
+import {
+  CTA,
+  FAQ,
+  Features,
+  Hero,
+  HowItWorks,
+  PriceCompare,
+  Stats,
+} from './components'
 import { useHomePageContent } from './hooks'
 
 export function Home() {

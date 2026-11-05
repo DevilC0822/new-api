@@ -31,11 +31,6 @@ export function DocsHero(props: DocsHeroProps) {
     <section className='relative z-10 border-b border-[#0F172A]/[0.08] pt-24 pb-8 md:pt-28 md:pb-10 dark:border-white/10'>
       <div className='mx-auto flex max-w-[1280px] flex-col justify-between gap-6 px-6 md:flex-row md:items-end md:px-10'>
         <div>
-          <div className='mb-2.5 inline-flex items-center gap-2 rounded-full border border-blue-600/18 bg-blue-600/[0.06] px-3 py-1 font-mono text-[11px] font-semibold tracking-[0.06em] text-blue-600 uppercase dark:border-blue-400/25 dark:bg-blue-500/10 dark:text-blue-400'>
-            <span className='size-1.5 rounded-full bg-blue-600 dark:bg-blue-400' />
-            <span>DEVELOPER DOCUMENTATION</span>
-          </div>
-
           <h1 className='text-[clamp(1.75rem,2.8vw,2.35rem)] leading-[1.18] font-extrabold tracking-[-0.03em] text-[#0F172A] dark:text-white'>
             {t('Integration Docs')}
           </h1>

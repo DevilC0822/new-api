@@ -20,8 +20,6 @@ export interface HeroDeckModel {
   id: string
   name: string
   dotColor: string
-  proto: string
-  badge: string
   ctx: string
   desc: string
   thinking: string
@@ -40,8 +38,6 @@ export const HERO_DECK_MODELS: HeroDeckModel[] = [
     id: 'claude-opus-5-5',
     name: 'Claude Opus 5.5',
     dotColor: '#2563EB',
-    proto: 'Dual Anthropic & OpenAI Protocol',
-    badge: 'Claude 80% off · Cache $0.04/M',
     ctx: 'claude-opus-5-5',
     desc: 'Ideal for architecture design, complex concurrency troubleshooting, and deep multi-step reasoning.',
     thinking: '● Default route group: Claude 80% off (Ratio 0.2)',
@@ -59,8 +55,6 @@ export const HERO_DECK_MODELS: HeroDeckModel[] = [
     id: 'gpt-6-astra',
     name: 'GPT-6 Astra',
     dotColor: '#059669',
-    proto: 'Dual OpenAI & Anthropic Protocol',
-    badge: 'GPT 93% off · Cache $0.07/M',
     ctx: 'gpt-6-astra',
     desc: 'Supports OpenAI Responses API and Codex CLI, ideal for algorithms, cross-file refactoring, and code review.',
     thinking: '● Default route group: GPT 93% off (Ratio 0.07)',
@@ -78,8 +72,6 @@ export const HERO_DECK_MODELS: HeroDeckModel[] = [
     id: 'deepseek-flash',
     name: 'DeepSeek V4.1 Flash',
     dotColor: '#0891B2',
-    proto: 'Dual Anthropic & OpenAI Protocol',
-    badge: 'DeepSeek 25% off + Off-peak 50% off',
     ctx: 'deepseek-flash',
     desc: 'Fast responses with automatic off-peak discounts, ideal for high-frequency agent loops.',
     thinking:
@@ -98,8 +90,6 @@ export const HERO_DECK_MODELS: HeroDeckModel[] = [
     id: 'glm-5.3',
     name: 'GLM-5.3',
     dotColor: '#6366F1',
-    proto: 'Dual Anthropic & OpenAI Protocol',
-    badge: 'GLM 80% off · Free cache creation',
     ctx: 'glm-5.3',
     desc: 'Optimized for full-stack engineering workflows and tool use, with free context caching.',
     thinking: '● Default route group: GLM 80% off (Ratio 0.2 · cc=0)',
@@ -117,8 +107,6 @@ export const HERO_DECK_MODELS: HeroDeckModel[] = [
     id: 'kimi-k3',
     name: 'Kimi K3.1 Pro',
     dotColor: '#D97706',
-    proto: 'Dual Anthropic & OpenAI Protocol',
-    badge: 'Kimi 65% off · Cache $0.105/M',
     ctx: 'kimi-k3',
     desc: 'Excels at long technical documentation, synthesis across materials, and codebase comprehension.',
     thinking: '● Default route group: Kimi 65% off (Ratio 0.35)',

@@ -78,8 +78,7 @@ const buildFormDefaults = (defaults: FlatPolicyDefaults): PolicyFormInput => ({
   policy: {
     violation_fee_enabled: defaults['policy.violation_fee_enabled'],
     violation_fee_usd: defaults['policy.violation_fee_usd'],
-    end_user_id_header_enabled:
-      defaults['policy.end_user_id_header_enabled'],
+    end_user_id_header_enabled: defaults['policy.end_user_id_header_enabled'],
     auto_restrict_enabled: defaults['policy.auto_restrict_enabled'],
     violation_threshold: defaults['policy.violation_threshold'],
     violation_window_minutes: defaults['policy.violation_window_minutes'],
@@ -89,8 +88,7 @@ const buildFormDefaults = (defaults: FlatPolicyDefaults): PolicyFormInput => ({
 const normalizeFormValues = (values: PolicyFormValues): FlatPolicyDefaults => ({
   'policy.violation_fee_enabled': values.policy.violation_fee_enabled,
   'policy.violation_fee_usd': values.policy.violation_fee_usd,
-  'policy.end_user_id_header_enabled':
-    values.policy.end_user_id_header_enabled,
+  'policy.end_user_id_header_enabled': values.policy.end_user_id_header_enabled,
   'policy.auto_restrict_enabled': values.policy.auto_restrict_enabled,
   'policy.violation_threshold': values.policy.violation_threshold,
   'policy.violation_window_minutes': values.policy.violation_window_minutes,
