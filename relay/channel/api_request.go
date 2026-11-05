@@ -62,6 +62,31 @@ func SetupApiRequestHeader(info *common.RelayInfo, c *gin.Context, req *http.Hea
 	}
 }
 
+// endUserIDHeaderName is the end-user identifier header fixed by the
+// aggregation platforms' multi-user restriction convention.
+const endUserIDHeaderName = "X-End-User-Id"
+
+// applyEndUserIDHeader tags the upstream request with a pseudonymous
+// end-user identifier so aggregation platforms restrict only the offending
+// user's traffic (rate limit, model pause) instead of the shared site key.
+// It runs after the adaptor's headers and before channel header overrides,
+// so an explicitly configured override value still wins.
+func applyEndUserIDHeader(c *gin.Context, header http.Header, info *common.RelayInfo) {
+	settings := operation_setting.GetPolicySetting()
+	if !settings.EndUserIDHeaderEnabled || info == nil || info.UserId <= 0 {
+		return
+	}
+	if header.Get(endUserIDHeaderName) != "" {
+		return
+	}
+	value := info.EndUserIDHeaderValue()
+	if value == "" {
+		return
+	}
+	header.Set(endUserIDHeaderName, value)
+	logger.LogDebug(c, "end user id header applied: %s", endUserIDHeaderName)
+}
+
 const clientHeaderPlaceholderPrefix = "{client_header:"
 
 const (
@@ -336,6 +361,8 @@ func DoApiRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBody
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
 	}
+	// 在 Header Override 之前注入终端用户标识头：adaptor 显式设置 > 本站注入 > 渠道 Header Override
+	applyEndUserIDHeader(c, req.Header, info)
 	// 在 SetupRequestHeader 之后应用 Header Override，确保用户设置优先级最高
 	// 这样可以覆盖默认的 Authorization header 设置
 	if err = ApplyHeaderOverride(info, c, req); err != nil {
@@ -366,6 +393,8 @@ func DoFormRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBod
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
 	}
+	// 在 Header Override 之前注入终端用户标识头：adaptor 显式设置 > 本站注入 > 渠道 Header Override
+	applyEndUserIDHeader(c, req.Header, info)
 	// 在 SetupRequestHeader 之后应用 Header Override，确保用户设置优先级最高
 	// 这样可以覆盖默认的 Authorization header 设置
 	if err = ApplyHeaderOverride(info, c, req); err != nil {
@@ -396,6 +425,8 @@ func DoWssRequest(a Adaptor, c *gin.Context, info *common.RelayInfo, requestBody
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
 	}
+	// 在 Header Override 之前注入终端用户标识头
+	applyEndUserIDHeader(c, targetHeader, info)
 	// 在 SetupRequestHeader 之后应用 Header Override，确保用户设置优先级最高
 	// 这样可以覆盖默认的 Authorization header 设置
 	headerOverride, err := processHeaderOverride(info, c)
@@ -536,6 +567,8 @@ func DoTaskApiRequest(a TaskAdaptor, c *gin.Context, info *common.RelayInfo, req
 	if err != nil {
 		return nil, fmt.Errorf("setup request header failed: %w", err)
 	}
+	// 在 Header Override 之前注入终端用户标识头
+	applyEndUserIDHeader(c, req.Header, info)
 	if err = ApplyHeaderOverride(info, c, req); err != nil {
 		return nil, err
 	}

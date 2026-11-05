@@ -557,4 +557,9 @@ func PostTextConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, us
 		Other:            other,
 	})
 	relayInfo.PerformanceOutputTokens = int64(summary.CompletionTokens)
+
+	// HTTP 200 refusals (finish_reason=content_filter / stop_reason=refusal)
+	// settle normally above; the aggregator's per-violation fee is charged
+	// separately and counts toward the per-user escalation limit.
+	ChargeRefusalViolationFeeIfNeeded(ctx, relayInfo)
 }

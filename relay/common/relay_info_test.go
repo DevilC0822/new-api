@@ -398,3 +398,22 @@ func TestInitChannelMetaResetsPerAttemptStreamStateAndPreservesRequestState(t *t
 func ptr[T any](value T) *T {
 	return &value
 }
+
+func TestRelayInfoEndUserIDHeaderValue(t *testing.T) {
+	first := &RelayInfo{UserId: 42}
+	value := first.EndUserIDHeaderValue()
+
+	// 32 visible-ASCII hex characters, stable for the same user.
+	require.Len(t, value, 32)
+	for _, r := range value {
+		require.Contains(t, "0123456789abcdef", string(r))
+	}
+	assert.Equal(t, value, (&RelayInfo{UserId: 42}).EndUserIDHeaderValue())
+
+	// Different users map to different identifiers.
+	assert.NotEqual(t, value, (&RelayInfo{UserId: 43}).EndUserIDHeaderValue())
+
+	// Anonymous traffic gets no identifier.
+	assert.Empty(t, (&RelayInfo{UserId: 0}).EndUserIDHeaderValue())
+	assert.Empty(t, (*RelayInfo)(nil).EndUserIDHeaderValue())
+}

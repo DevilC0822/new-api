@@ -23,6 +23,7 @@ import { ClaudeSettingsCard } from './claude-settings-card'
 import { GeminiSettingsCard } from './gemini-settings-card'
 import { GlobalSettingsCard } from './global-settings-card'
 import { GrokSettingsCard } from './grok-settings-card'
+import { PolicySettingsCard } from './policy-settings-card'
 
 function formatJsonForEditor(value: string, fallback: string) {
   const raw = (value ?? '').toString().trim()
@@ -116,6 +117,29 @@ const MODELS_SECTIONS = [
             settings['grok.violation_deduction_enabled'] ?? true,
           'grok.violation_deduction_amount':
             settings['grok.violation_deduction_amount'] ?? 0.05,
+        }}
+      />
+    ),
+  },
+
+  {
+    id: 'policy',
+    titleKey: 'Upstream Policy Violation',
+    build: (settings: ModelSettings) => (
+      <PolicySettingsCard
+        defaultValues={{
+          'policy.violation_fee_enabled':
+            settings['policy.violation_fee_enabled'] ?? false,
+          'policy.violation_fee_usd':
+            settings['policy.violation_fee_usd'] ?? 0.1,
+          'policy.end_user_id_header_enabled':
+            settings['policy.end_user_id_header_enabled'] ?? false,
+          'policy.auto_restrict_enabled':
+            settings['policy.auto_restrict_enabled'] ?? false,
+          'policy.violation_threshold':
+            settings['policy.violation_threshold'] ?? 5,
+          'policy.violation_window_minutes':
+            settings['policy.violation_window_minutes'] ?? 60,
         }}
       />
     ),

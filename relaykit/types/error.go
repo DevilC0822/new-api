@@ -41,6 +41,7 @@ const (
 	ErrorCodeInvalidRequest         ErrorCode = "invalid_request"
 	ErrorCodeSensitiveWordsDetected ErrorCode = "sensitive_words_detected"
 	ErrorCodeViolationFeeGrokCSAM   ErrorCode = "violation_fee.grok.csam"
+	ErrorCodeViolationFeeUpstream   ErrorCode = "violation_fee.upstream_policy"
 
 	// new api error
 	ErrorCodeCountTokenFailed   ErrorCode = "count_token_failed"

@@ -1,6 +1,8 @@
 package common
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -795,6 +797,19 @@ func (info *RelayInfo) GetFinalRequestRelayFormat() types.RelayFormat {
 		return info.RequestConversionChain[n-1]
 	}
 	return info.RelayFormat
+}
+
+// EndUserIDHeaderValue returns a stable pseudonymous identifier for the
+// requesting user. Aggregation platforms that enforce per-end-user policy
+// restrictions use it to rate-limit or pause only the offending user's
+// traffic instead of the shared site key. The value is 32 visible-ASCII hex
+// characters derived from the user id, never personal data.
+func (info *RelayInfo) EndUserIDHeaderValue() string {
+	if info == nil || info.UserId <= 0 {
+		return ""
+	}
+	sum := sha256.Sum256([]byte("new-api-user:" + strconv.Itoa(info.UserId)))
+	return hex.EncodeToString(sum[:16])
 }
 
 func GenRelayInfoResponsesCompaction(c *gin.Context, request *dto.OpenAIResponsesCompactionRequest) *RelayInfo {

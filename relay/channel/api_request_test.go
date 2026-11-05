@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -216,4 +217,43 @@ func TestToWebSocketURL(t *testing.T) {
 	} {
 		assert.Equal(t, want, toWebSocketURL(input), input)
 	}
+}
+
+func TestApplyEndUserIDHeader(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+
+	settings := operation_setting.GetPolicySetting()
+	previous := *settings
+	t.Cleanup(func() { *settings = previous })
+
+	info := &relaycommon.RelayInfo{UserId: 7}
+
+	t.Run("header injected when enabled", func(t *testing.T) {
+		settings.EndUserIDHeaderEnabled = true
+		header := http.Header{}
+		applyEndUserIDHeader(ctx, header, info)
+		require.Equal(t, info.EndUserIDHeaderValue(), header.Get("X-End-User-Id"))
+	})
+
+	t.Run("existing value is not overwritten", func(t *testing.T) {
+		settings.EndUserIDHeaderEnabled = true
+		header := http.Header{}
+		header.Set("X-End-User-Id", "explicit-value")
+		applyEndUserIDHeader(ctx, header, info)
+		require.Equal(t, "explicit-value", header.Get("X-End-User-Id"))
+	})
+
+	t.Run("disabled or anonymous requests get no header", func(t *testing.T) {
+		settings.EndUserIDHeaderEnabled = false
+		header := http.Header{}
+		applyEndUserIDHeader(ctx, header, info)
+		require.Empty(t, header.Get("X-End-User-Id"))
+
+		settings.EndUserIDHeaderEnabled = true
+		anonymous := http.Header{}
+		applyEndUserIDHeader(ctx, anonymous, &relaycommon.RelayInfo{UserId: 0})
+		require.Empty(t, anonymous.Get("X-End-User-Id"))
+	})
 }

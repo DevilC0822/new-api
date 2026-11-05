@@ -245,6 +245,12 @@ export type ModelSettings = {
   'claude.thinking_adapter_budget_tokens_percentage': number
   'grok.violation_deduction_enabled': boolean
   'grok.violation_deduction_amount': number
+  'policy.violation_fee_enabled': boolean
+  'policy.violation_fee_usd': number
+  'policy.end_user_id_header_enabled': boolean
+  'policy.auto_restrict_enabled': boolean
+  'policy.violation_threshold': number
+  'policy.violation_window_minutes': number
   ModelPrice: string
   ModelRatio: string
   CacheRatio: string
