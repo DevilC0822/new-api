@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
+	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/pkg/billingexpr"
 	"github.com/QuantumNous/new-api/pkg/jsplugin"
@@ -23,6 +25,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestUpdateOptionRejectsInvalidTaskBillingExpressions(t *testing.T) {
@@ -321,5 +324,138 @@ func TestPreConsumeMultiplierRejectsInvalidRuntimeAndOverflow(t *testing.T) {
 		_, err := helper.ModelPriceHelper(ctx, info, 1000, &types.TokenCountMeta{})
 		require.Error(t, err)
 		assert.Nil(t, info.Billing)
+	}
+}
+
+func TestSubscriptionAllowedGroupsFundingMatrix(t *testing.T) {
+	previous := config.GlobalConfig.ExportAllConfigs()
+	previousTrust := operation_setting.GetQuotaSetting().TrustQuotaUSD
+	t.Cleanup(func() {
+		require.NoError(t, config.GlobalConfig.LoadFromDB(previous))
+		operation_setting.GetQuotaSetting().TrustQuotaUSD = previousTrust
+	})
+	for _, dialect := range []struct{ kind, env string }{{"sqlite", ""}, {"mysql", "TEST_MYSQL_DSN"}, {"postgres", "TEST_POSTGRES_DSN"}} {
+		t.Run(dialect.kind, func(t *testing.T) {
+			if dialect.env != "" && os.Getenv(dialect.env) == "" {
+				t.Skip("set " + dialect.env + " to run this database")
+			}
+			db := modelManagementDB(t, dialect.kind, os.Getenv(dialect.env))
+			require.NoError(t, db.AutoMigrate(&model.Token{}, &model.SubscriptionPlan{}, &model.UserSubscription{}, &model.SubscriptionPreConsumeRecord{}))
+			require.NoError(t, i18n.Init())
+			require.NoError(t, config.GlobalConfig.LoadFromDB(map[string]string{
+				"group_ratio_setting.group_ratio": `{"default":1,"glm-trial":1}`,
+			}))
+			// Disable the trust bypass so wallet pre-consume always reserves.
+			operation_setting.GetQuotaSetting().TrustQuotaUSD = 0
+
+			// Channel-group allowlist validation on plan create/update.
+			for _, tc := range []struct{ raw, want, wantErr string }{
+				{"", "", ""},
+				{" glm-trial , default ", "glm-trial,default", ""},
+				{"glm-trial,glm-trial", "glm-trial", ""},
+				{"auto", "", "Allowed groups cannot include auto"},
+				{"missing-group", "", "Allowed group does not exist"},
+			} {
+				got, errKey := normalizePlanAllowedGroups(tc.raw)
+				assert.Equal(t, tc.want, got, "input %q", tc.raw)
+				assert.Equal(t, tc.wantErr, errKey, "input %q", tc.raw)
+			}
+
+			// allowed_groups snapshot at subscription creation.
+			now := model.GetDBTimestamp()
+			plan := model.SubscriptionPlan{Title: "glm-trial-plan", TotalAmount: 500, AllowedGroups: "glm-trial", DurationUnit: "month", DurationValue: 1}
+			require.NoError(t, db.Create(&plan).Error)
+			snapUser := model.User{Username: "sub-snap-user", Quota: 0, Group: "default"}
+			require.NoError(t, db.Create(&snapUser).Error)
+			var snapSub *model.UserSubscription
+			require.NoError(t, db.Transaction(func(tx *gorm.DB) error {
+				var err error
+				snapSub, err = model.CreateUserSubscriptionFromPlanTx(tx, snapUser.Id, &plan, "admin")
+				return err
+			}))
+			assert.Equal(t, "glm-trial", snapSub.AllowedGroups)
+			require.NoError(t, db.Model(&model.SubscriptionPlan{}).Where("id = ?", plan.Id).Update("allowed_groups", "other").Error)
+			assert.Equal(t, "glm-trial", snapSub.AllowedGroups, "editing the plan must not change issued snapshots")
+
+			cases := []struct {
+				name             string
+				allowedGroups    string // subscription allowlist ("" = unrestricted)
+				overflow         bool
+				channelGroups    []string // groups of the selected channel (nil = no context)
+				preference       string
+				wallet           int
+				subTotal, subUse int64
+				amount           int
+				wantErr          bool
+				wantSource       string
+				wantSubUsed      int64
+				wantWallet       int
+			}{
+				{"restricted sub pays glm-trial request", "glm-trial", true, []string{"default", "glm-trial"}, "subscription_first", 2000, 500, 0, 100, false, "subscription", 100, 2000},
+				{"restricted sub skipped for default request", "glm-trial", true, []string{"default"}, "subscription_first", 2000, 500, 0, 100, false, "wallet", 0, 1900},
+				{"unrestricted sub keeps legacy behavior", "", true, []string{"default"}, "subscription_first", 2000, 500, 0, 100, false, "subscription", 100, 2000},
+				{"exhausted sub overflows to wallet", "glm-trial", true, []string{"glm-trial"}, "subscription_first", 2000, 500, 500, 100, false, "wallet", 500, 1900},
+				{"exhausted strict sub rejects", "glm-trial", false, []string{"glm-trial"}, "subscription_first", 2000, 500, 500, 100, true, "", 500, 2000},
+				{"strict sub never blocks other groups", "glm-trial", false, []string{"default"}, "subscription_first", 2000, 500, 0, 100, false, "wallet", 0, 1900},
+				{"wallet_first falls back to applicable sub", "glm-trial", true, []string{"glm-trial"}, "wallet_first", 0, 500, 0, 100, false, "subscription", 100, 0},
+				{"wallet_only ignores applicable sub", "glm-trial", true, []string{"glm-trial"}, "wallet_only", 2000, 500, 0, 100, false, "wallet", 0, 1900},
+				{"subscription_only with applicable sub consumes sub", "glm-trial", true, []string{"glm-trial"}, "subscription_only", 2000, 500, 0, 100, false, "subscription", 100, 2000},
+				{"subscription_only without applicable sub rejects", "glm-trial", true, []string{"default"}, "subscription_only", 2000, 500, 0, 100, true, "", 0, 2000},
+				{"no subscription uses wallet", "", true, []string{"default"}, "subscription_first", 2000, 0, 0, 100, false, "wallet", 0, 1900},
+				{"no channel groups keeps legacy matching", "glm-trial", true, nil, "subscription_first", 2000, 500, 0, 100, false, "subscription", 100, 2000},
+			}
+			for i, tc := range cases {
+				t.Run(tc.name, func(t *testing.T) {
+					user := model.User{Username: fmt.Sprintf("sub-fund-user-%d", i), Quota: tc.wallet, Group: "default", AffCode: fmt.Sprintf("sub-fund-aff-%d", i)}
+					require.NoError(t, db.Create(&user).Error)
+					token := model.Token{UserId: user.Id, Key: fmt.Sprintf("sub-fund-token-%d", i), UnlimitedQuota: true}
+					require.NoError(t, db.Create(&token).Error)
+					var subId int
+					if tc.subTotal > 0 {
+						sub := model.UserSubscription{
+							UserId: user.Id, PlanId: plan.Id, AmountTotal: tc.subTotal, AmountUsed: tc.subUse,
+							StartTime: now, EndTime: now + 3600, Status: "active",
+							AllowedGroups: tc.allowedGroups, AllowWalletOverflow: tc.overflow,
+						}
+						require.NoError(t, db.Create(&sub).Error)
+						subId = sub.Id
+					}
+					ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+					ctx.Request = httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+					if tc.channelGroups != nil {
+						common.SetContextKey(ctx, constant.ContextKeyChannelGroups, tc.channelGroups)
+					}
+					info := &relaycommon.RelayInfo{
+						UserId: user.Id, TokenId: token.Id, TokenKey: token.Key, TokenUnlimited: true,
+						OriginModelName: "policy-model", UserGroup: "default", UsingGroup: "default",
+						RequestId: fmt.Sprintf("sub-fund-req-%d", i),
+					}
+					info.UserSetting.BillingPreference = tc.preference
+					apiErr := service.PreConsumeBilling(ctx, tc.amount, info)
+					if tc.wantErr {
+						require.NotNil(t, apiErr)
+						assert.Equal(t, types.ErrorCodeInsufficientUserQuota, apiErr.GetErrorCode())
+					} else {
+						require.Nil(t, apiErr)
+						assert.Equal(t, tc.wantSource, info.BillingSource)
+					}
+					require.NoError(t, db.First(&user, user.Id).Error)
+					assert.Equal(t, tc.wantWallet, user.Quota)
+					if subId > 0 {
+						var sub model.UserSubscription
+						require.NoError(t, db.First(&sub, subId).Error)
+						assert.Equal(t, tc.wantSubUsed, sub.AmountUsed)
+						// Settlement keeps attributing to the same subscription.
+						if info.Billing != nil && info.BillingSource == "subscription" {
+							require.NoError(t, info.Billing.Settle(tc.amount+20))
+							require.NoError(t, db.First(&sub, subId).Error)
+							assert.Equal(t, tc.wantSubUsed+20, sub.AmountUsed)
+							require.NoError(t, db.First(&user, user.Id).Error)
+							assert.Equal(t, tc.wantWallet, user.Quota, "subscription settle must not touch wallet")
+						}
+					}
+				})
+			}
+		})
 	}
 }

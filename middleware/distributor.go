@@ -601,6 +601,8 @@ func SetupContextForSelectedChannel(c *gin.Context, channel *model.Channel, mode
 	common.SetContextKey(c, constant.ContextKeyChannelName, channel.Name)
 	common.SetContextKey(c, constant.ContextKeyChannelType, channel.Type)
 	common.SetContextKey(c, constant.ContextKeyChannelCreateTime, channel.CreatedTime)
+	// Channel groups drive subscription allowlist matching at billing time.
+	common.SetContextKey(c, constant.ContextKeyChannelGroups, channel.GetGroups())
 	common.SetContextKey(c, constant.ContextKeyChannelSetting, channel.GetSetting())
 	common.SetContextKey(c, constant.ContextKeyChannelOtherSetting, channel.GetOtherSettings())
 	switch channel.Type {

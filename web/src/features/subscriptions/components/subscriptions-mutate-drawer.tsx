@@ -31,6 +31,7 @@ import {
   sideDrawerHeaderClassName,
   sideDrawerSwitchItemClassName,
 } from '@/components/drawer-layout'
+import { MultiSelect } from '@/components/multi-select'
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
 import {
@@ -491,6 +492,34 @@ export function SubscriptionsMutateDrawer({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name='allowed_groups'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Allowed Groups')}</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={groupOptions.map((g) => ({
+                          value: g,
+                          label: g,
+                        }))}
+                        selected={field.value || []}
+                        onChange={field.onChange}
+                        className='w-full'
+                        placeholder={t('All Groups')}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        'Only requests routed to channels in these groups consume this plan quota. Empty means all groups.'
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

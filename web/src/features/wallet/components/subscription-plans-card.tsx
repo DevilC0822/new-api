@@ -547,6 +547,9 @@ export function SubscriptionPlansCard({
                 plan.upgrade_group
                   ? `${t('Upgrade Group')}: ${plan.upgrade_group}`
                   : null,
+                plan.allowed_groups
+                  ? `${t('Allowed Groups')}: ${plan.allowed_groups}`
+                  : null,
               ].filter(Boolean) as string[]
 
               return (

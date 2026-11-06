@@ -137,6 +137,39 @@ type AdminUpsertSubscriptionPlanRequest struct {
 	Plan model.SubscriptionPlan `json:"plan"`
 }
 
+// normalizePlanAllowedGroups validates and normalizes the comma-separated
+// channel-group allowlist. Empty means no restriction (legacy behavior). Every
+// entry must be a configured group; "auto" is rejected because it resolves per
+// attempt and cannot be a stable channel-group key.
+//
+// Deployment note: channel retries reuse the billing session, so a model that
+// is served through both allowed and non-allowed channels may settle restricted
+// quota on a non-allowed channel after a retry. Keep each model's channels
+// consistent with the allowlist.
+func normalizePlanAllowedGroups(raw string) (string, string) {
+	groupRatios := ratio_setting.GetGroupRatioCopy()
+	seen := make(map[string]struct{}, len(groupRatios))
+	normalized := make([]string, 0, len(groupRatios))
+	for _, entry := range strings.Split(raw, ",") {
+		group := strings.TrimSpace(entry)
+		if group == "" {
+			continue
+		}
+		if group == "auto" {
+			return "", "Allowed groups cannot include auto"
+		}
+		if _, ok := groupRatios[group]; !ok {
+			return "", "Allowed group does not exist"
+		}
+		if _, dup := seen[group]; dup {
+			continue
+		}
+		seen[group] = struct{}{}
+		normalized = append(normalized, group)
+	}
+	return strings.Join(normalized, ","), ""
+}
+
 func AdminCreateSubscriptionPlan(c *gin.Context) {
 	if !requirePaymentCompliance(c) {
 		return
@@ -198,6 +231,12 @@ func AdminCreateSubscriptionPlan(c *gin.Context) {
 			return
 		}
 	}
+	allowedGroups, groupErr := normalizePlanAllowedGroups(req.Plan.AllowedGroups)
+	if groupErr != "" {
+		common.ApiErrorT(c, groupErr)
+		return
+	}
+	req.Plan.AllowedGroups = allowedGroups
 	req.Plan.QuotaResetPeriod = model.NormalizeResetPeriod(req.Plan.QuotaResetPeriod)
 	if req.Plan.QuotaResetPeriod == model.SubscriptionResetCustom && req.Plan.QuotaResetCustomSeconds <= 0 {
 		common.ApiErrorT(c, "Custom reset cycle must be greater than 0 seconds")
@@ -272,6 +311,11 @@ func AdminUpdateSubscriptionPlan(c *gin.Context) {
 			return
 		}
 	}
+	allowedGroups, groupErr := normalizePlanAllowedGroups(req.Plan.AllowedGroups)
+	if groupErr != "" {
+		common.ApiErrorT(c, groupErr)
+		return
+	}
 	req.Plan.QuotaResetPeriod = model.NormalizeResetPeriod(req.Plan.QuotaResetPeriod)
 	if req.Plan.QuotaResetPeriod == model.SubscriptionResetCustom && req.Plan.QuotaResetCustomSeconds <= 0 {
 		common.ApiErrorT(c, "Custom reset cycle must be greater than 0 seconds")
@@ -297,6 +341,7 @@ func AdminUpdateSubscriptionPlan(c *gin.Context) {
 			"total_amount":               req.Plan.TotalAmount,
 			"upgrade_group":              req.Plan.UpgradeGroup,
 			"downgrade_group":            req.Plan.DowngradeGroup,
+			"allowed_groups":             allowedGroups,
 			"quota_reset_period":         req.Plan.QuotaResetPeriod,
 			"quota_reset_custom_seconds": req.Plan.QuotaResetCustomSeconds,
 			"updated_at":                 common.GetTimestamp(),

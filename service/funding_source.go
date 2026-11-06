@@ -85,6 +85,9 @@ type SubscriptionFunding struct {
 	amount         int64 // 预扣的订阅额度（subConsume）
 	subscriptionId int
 	preConsumed    int64
+	// channelGroups 是本次请求实际选中渠道的分组列表；只有分组限定（allowed_groups）
+	// 与之匹配的订阅才可被消耗。nil 表示无渠道分组上下文（保持旧行为，不过滤）。
+	channelGroups []string
 	// 以下字段在 PreConsume 成功后填充，供 RelayInfo 同步使用
 	AmountTotal     int64
 	AmountUsedAfter int64
@@ -96,7 +99,7 @@ func (s *SubscriptionFunding) Source() string { return BillingSourceSubscription
 
 func (s *SubscriptionFunding) PreConsume(_ int) error {
 	// amount 参数被忽略，使用内部 s.amount（已在构造时根据 preConsumedQuota 计算）
-	res, err := model.PreConsumeUserSubscription(s.requestId, s.userId, s.modelName, 0, s.amount)
+	res, err := model.PreConsumeUserSubscription(s.requestId, s.userId, s.modelName, 0, s.amount, s.channelGroups)
 	if err != nil {
 		return err
 	}

@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
@@ -247,7 +248,9 @@ func (s *BillingSession) preConsume(c *gin.Context, quota int) *types.NewAPIErro
 				types.ErrOptionWithSkipRetry(), types.ErrOptionWithNoRecordErrorLog())
 		}
 		errMsg := err.Error()
-		if strings.Contains(errMsg, "no active subscription") || strings.Contains(errMsg, "subscription quota insufficient") {
+		// "no applicable subscription"：用户有活跃订阅但均不适用于当前渠道分组，
+		// 与额度不足同样映射为 InsufficientUserQuota，使 subscription_first 回退到钱包。
+		if strings.Contains(errMsg, "no active subscription") || strings.Contains(errMsg, "no applicable subscription") || strings.Contains(errMsg, "subscription quota insufficient") {
 			return types.NewErrorWithStatusCode(errors.New(i18n.T(c, i18n.MsgQuotaSubscriptionInsufficient, map[string]any{"Error": errMsg})), types.ErrorCodeInsufficientUserQuota, http.StatusForbidden, types.ErrOptionWithSkipRetry(), types.ErrOptionWithNoRecordErrorLog())
 		}
 		return types.NewError(err, types.ErrorCodeUpdateDataError, types.ErrOptionWithSkipRetry())
@@ -393,6 +396,11 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 
 	pref := common.NormalizeBillingPreference(relayInfo.UserSetting.BillingPreference)
 
+	// 分组限定订阅（allowed_groups）以本次实际选中渠道的分组为匹配依据；
+	// 渠道分组在 distributor 选定渠道后写入 context。无该上下文时为 nil，
+	// 订阅匹配退化为旧行为（不限制）。
+	channelGroups, _ := common.GetContextKeyType[[]string](c, constant.ContextKeyChannelGroups)
+
 	// 钱包路径需要先检查用户额度
 	tryWallet := func() (*BillingSession, *types.NewAPIError) {
 		userQuota, err := model.GetUserQuota(relayInfo.UserId, false)
@@ -433,10 +441,11 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 			relayInfo: relayInfo,
 			lang:      i18n.StatedLang(c),
 			funding: &SubscriptionFunding{
-				requestId: relayInfo.RequestId,
-				userId:    relayInfo.UserId,
-				modelName: relayInfo.GetBillingModelName(),
-				amount:    subConsume,
+				requestId:     relayInfo.RequestId,
+				userId:        relayInfo.UserId,
+				modelName:     relayInfo.GetBillingModelName(),
+				amount:        subConsume,
+				channelGroups: channelGroups,
 			},
 		}
 		// 必须传 subConsume 而非 preConsumedQuota，保证 SubscriptionFunding.amount、
@@ -464,7 +473,7 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 	case "subscription_first":
 		fallthrough
 	default:
-		hasSub, subCheckErr := model.HasActiveUserSubscription(relayInfo.UserId)
+		hasSub, subCheckErr := model.HasApplicableUserSubscription(relayInfo.UserId, channelGroups)
 		if subCheckErr != nil {
 			return nil, types.NewError(subCheckErr, types.ErrorCodeQueryDataError, types.ErrOptionWithSkipRetry())
 		}
@@ -474,8 +483,9 @@ func NewBillingSession(c *gin.Context, relayInfo *relaycommon.RelayInfo, preCons
 		session, apiErr := trySubscription()
 		if apiErr != nil {
 			if apiErr.GetErrorCode() == types.ErrorCodeInsufficientUserQuota {
-				// 仅当用户的活跃订阅允许钱包回退时才回退到钱包，否则返回订阅额度不足错误
-				allowOverflow, overflowErr := model.UserActiveSubscriptionsAllowWalletOverflow(relayInfo.UserId)
+				// 仅当适用于当前请求的活跃订阅允许钱包回退时才回退到钱包，
+				// 否则返回订阅额度不足错误。无适用订阅时此处必然允许回退。
+				allowOverflow, overflowErr := model.UserActiveSubscriptionsAllowWalletOverflow(relayInfo.UserId, channelGroups)
 				if overflowErr != nil {
 					return nil, types.NewError(overflowErr, types.ErrorCodeQueryDataError, types.ErrOptionWithSkipRetry())
 				}
