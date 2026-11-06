@@ -72,6 +72,7 @@ func AddRedemption(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
+	auditPlanTitle := ""
 	if utf8.RuneCountInString(redemption.Name) == 0 || utf8.RuneCountInString(redemption.Name) > 20 {
 		common.ApiErrorT(c, "Redemption code name length must be between 1-20")
 		return
@@ -84,13 +85,24 @@ func AddRedemption(c *gin.Context) {
 		common.ApiErrorT(c, "Maximum 100 redemption codes can be generated at once")
 		return
 	}
-	if redemption.Quota <= 0 {
-		common.ApiErrorT(c, "Redemption quota must be positive")
-		return
-	}
-	if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
-		common.ApiError(c, err)
-		return
+	if redemption.PlanId > 0 {
+		// 订阅兑换码：额度恒为 0；套餐禁用仍可创建与兑换（已发出的码视为承诺）
+		plan, err := model.GetSubscriptionPlanById(redemption.PlanId)
+		if err != nil {
+			common.ApiErrorT(c, "Subscription plan not found")
+			return
+		}
+		redemption.Quota = 0
+		auditPlanTitle = plan.Title
+	} else {
+		if redemption.Quota <= 0 {
+			common.ApiErrorT(c, "Redemption quota must be positive")
+			return
+		}
+		if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
+			common.ApiError(c, err)
+			return
+		}
 	}
 	if err := validateExpiredTime(redemption.ExpiredTime); err != nil {
 		common.ApiError(c, err)
@@ -106,6 +118,7 @@ func AddRedemption(c *gin.Context) {
 			CreatedTime: common.GetTimestamp(),
 			Quota:       redemption.Quota,
 			ExpiredTime: redemption.ExpiredTime,
+			PlanId:      redemption.PlanId,
 		}
 		err = cleanRedemption.Insert()
 		if err != nil {
@@ -115,11 +128,16 @@ func AddRedemption(c *gin.Context) {
 		}
 		keys = append(keys, key)
 	}
-	recordManageAudit(c, "redemption.create", map[string]any{
+	auditFields := map[string]any{
 		"name":  redemption.Name,
 		"count": redemption.Count,
 		"quota": logger.FormatQuota(redemption.Quota),
-	})
+	}
+	if redemption.PlanId > 0 {
+		auditFields["plan_id"] = redemption.PlanId
+		auditFields["plan_title"] = auditPlanTitle
+	}
+	recordManageAudit(c, "redemption.create", auditFields)
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
@@ -156,13 +174,17 @@ func UpdateRedemption(c *gin.Context) {
 		return
 	}
 	if statusOnly == "" {
-		if redemption.Quota <= 0 {
-			common.ApiErrorT(c, "Redemption quota must be positive")
-			return
-		}
-		if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
-			common.ApiError(c, err)
-			return
+		// 订阅码（plan_id > 0）额度恒为 0，不可修改额度
+		if cleanRedemption.PlanId == 0 {
+			if redemption.Quota <= 0 {
+				common.ApiErrorT(c, "Redemption quota must be positive")
+				return
+			}
+			if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
+				common.ApiError(c, err)
+				return
+			}
+			cleanRedemption.Quota = redemption.Quota
 		}
 		if err := validateExpiredTime(redemption.ExpiredTime); err != nil {
 			common.ApiError(c, err)
@@ -170,7 +192,6 @@ func UpdateRedemption(c *gin.Context) {
 		}
 		// If you add more fields, please also update redemption.Update()
 		cleanRedemption.Name = redemption.Name
-		cleanRedemption.Quota = redemption.Quota
 		cleanRedemption.ExpiredTime = redemption.ExpiredTime
 	}
 	if statusOnly != "" {

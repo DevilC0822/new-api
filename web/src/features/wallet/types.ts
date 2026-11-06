@@ -30,10 +30,19 @@ export interface ApiResponse<T = unknown> {
 }
 
 /**
+ * 兑换结果：plan_title 非空表示订阅码兑换成功，quota 仅对额度码有效
+ */
+export interface RedeemResultData {
+  quota: number
+  plan_id: number
+  plan_title: string
+}
+
+/**
  * Standard API response types
  */
 export type TopupInfoResponse = ApiResponse<TopupInfo>
-export type RedemptionResponse = ApiResponse<number>
+export type RedemptionResponse = ApiResponse<RedeemResultData>
 export type AmountResponse = ApiResponse<string>
 export type PaymentResponse = ApiResponse<Record<string, unknown>> & {
   url?: string

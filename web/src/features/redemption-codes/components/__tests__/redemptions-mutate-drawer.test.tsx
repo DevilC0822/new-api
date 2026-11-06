@@ -44,6 +44,11 @@ await i18n.use(initReactI18next).init({
         'Loading...': 'Loading...',
         'Save changes': 'Save changes',
         'Something went wrong!': 'Something went wrong!',
+        'Please select a subscription plan':
+          'Please select a subscription plan',
+        'Select subscription plan': 'Select subscription plan',
+        'Subscription plan': 'Subscription plan',
+        'Wallet quota': 'Wallet quota',
       },
     },
   },
@@ -53,6 +58,7 @@ type ApiMethod = (url: string, data?: unknown) => Promise<{ data: unknown }>
 type MockableApi = {
   get: ApiMethod
   put: ApiMethod
+  post: ApiMethod
 }
 type RenderedDrawer = {
   result: RenderResult
@@ -65,6 +71,7 @@ type CurrencyFixture = {
 const apiClient = api as unknown as MockableApi
 const originalGet = apiClient.get
 const originalPut = apiClient.put
+const originalPost = apiClient.post
 const originalConsoleLog = Reflect.get(console, 'log')
 let renderedDrawer: RenderedDrawer | null = null
 
@@ -80,6 +87,7 @@ function redemption(id: number, quota = 500001): Redemption {
     redeemed_time: 0,
     expired_time: 0,
     used_user_id: 0,
+    plan_id: 0,
   }
 }
 
@@ -93,7 +101,7 @@ function deferred<T>() {
   return { promise, reject, resolve }
 }
 
-function drawerTree(currentRow: Redemption, open = true) {
+function drawerTree(currentRow?: Redemption, open = true) {
   return (
     <I18nextProvider i18n={i18n}>
       <RedemptionsProvider>
@@ -109,7 +117,7 @@ function drawerTree(currentRow: Redemption, open = true) {
 }
 
 async function renderDrawer(
-  currentRow: Redemption,
+  currentRow?: Redemption,
   currency: CurrencyFixture = {
     quotaDisplayType: 'USD',
     usdExchangeRate: 1,
@@ -183,6 +191,7 @@ async function waitForLoadedForm(): Promise<void> {
 afterEach(() => {
   apiClient.get = originalGet
   apiClient.put = originalPut
+  apiClient.post = originalPost
   Reflect.set(console, 'log', originalConsoleLog)
   toast.dismiss()
   localStorage.clear()
@@ -379,5 +388,46 @@ describe('redemption drawer', () => {
 
     expect(updates[0]?.id).toBe(2)
     expect(updates[0]?.quota).toBe(1000001)
+  })
+
+  test('create mode swaps quota input for the plan selector and blocks submit without a plan', async () => {
+    const posts: unknown[] = []
+    apiClient.get = async () => ({
+      data: {
+        success: true,
+        data: [{ plan: { id: 7, title: 'Trial', price_amount: 0 } }],
+      },
+    })
+    apiClient.post = async (_url, data) => {
+      posts.push(data)
+      return { data: { success: true, data: ['new-key-1'] } }
+    }
+
+    await renderDrawer(undefined)
+    await waitForLoadedForm()
+    expect(getControlByLabel('Quota (USD)')).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('radio', { name: 'Subscription plan' })
+    )
+
+    await waitFor(() =>
+      expect(
+        screen.getByPlaceholderText('Select subscription plan')
+      ).toBeInTheDocument()
+    )
+    expect(
+      screen.queryByLabelText('Quota (USD)')
+    ).not.toBeInTheDocument()
+
+    changeInput(getControlByLabel('Name'), 'trial-promo')
+    submitForm()
+
+    await waitFor(() =>
+      expect(document.body).toHaveTextContent(
+        'Please select a subscription plan'
+      )
+    )
+    expect(posts).toEqual([])
   })
 })

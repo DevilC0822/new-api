@@ -25,6 +25,7 @@ import { formatQuota } from '@/lib/format'
 import { handleServerError } from '@/lib/handle-server-error'
 
 import { redeemTopupCode } from '../api'
+import type { RedeemResultData } from '../types'
 
 // ============================================================================
 // Redemption Hook
@@ -33,36 +34,47 @@ import { redeemTopupCode } from '../api'
 export function useRedemption() {
   const [redeeming, setRedeeming] = useState(false)
 
-  const redeemCode = useCallback(async (code: string): Promise<boolean> => {
-    if (!code || code.trim() === '') {
-      toast.error(i18next.t('Please enter a redemption code'))
-      return false
-    }
-
-    try {
-      setRedeeming(true)
-      const response = await redeemTopupCode({ key: code })
-
-      if (response.success && response.data) {
-        const quotaAdded = response.data
-        toast.success(
-          i18next.t('Redemption successful! Added: {{quota}}', {
-            quota: formatQuota(quotaAdded),
-          })
-        )
-        await getSelf()
-        return true
+  const redeemCode = useCallback(
+    async (code: string): Promise<RedeemResultData | null> => {
+      if (!code || code.trim() === '') {
+        toast.error(i18next.t('Please enter a redemption code'))
+        return null
       }
 
-      handleServerError(response, i18next.t('Redemption failed'))
-      return false
-    } catch (_error) {
-      handleServerError(_error, i18next.t('Redemption failed'))
-      return false
-    } finally {
-      setRedeeming(false)
-    }
-  }, [])
+      try {
+        setRedeeming(true)
+        const response = await redeemTopupCode({ key: code })
+
+        if (response.success && response.data) {
+          const { quota, plan_title: planTitle } = response.data
+          if (planTitle) {
+            toast.success(
+              i18next.t('Subscription activated: {{plan}}', {
+                plan: planTitle,
+              })
+            )
+          } else {
+            toast.success(
+              i18next.t('Redemption successful! Added: {{quota}}', {
+                quota: formatQuota(quota),
+              })
+            )
+          }
+          await getSelf()
+          return response.data
+        }
+
+        handleServerError(response, i18next.t('Redemption failed'))
+        return null
+      } catch (_error) {
+        handleServerError(_error, i18next.t('Redemption failed'))
+        return null
+      } finally {
+        setRedeeming(false)
+      }
+    },
+    []
+  )
 
   return {
     redeeming,

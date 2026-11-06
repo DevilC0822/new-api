@@ -68,6 +68,8 @@ interface SubscriptionPlansCardProps {
   onAvailabilityChange?: (available: boolean) => void
   userQuota?: number
   onPurchaseSuccess?: () => void | Promise<void>
+  /** 递增信号：兑换订阅码成功后触发重新拉取订阅列表 */
+  refreshSignal?: number
 }
 
 function getEpayMethods(payMethods: PaymentMethod[] = []): PaymentMethod[] {
@@ -99,6 +101,7 @@ export function SubscriptionPlansCard({
   onAvailabilityChange,
   userQuota,
   onPurchaseSuccess,
+  refreshSignal = 0,
 }: SubscriptionPlansCardProps) {
   const { t } = useTranslation()
 
@@ -161,6 +164,12 @@ export function SubscriptionPlansCard({
     }
     init()
   }, [fetchPlans, fetchSelfSubscription])
+
+  useEffect(() => {
+    if (refreshSignal > 0) {
+      void fetchSelfSubscription()
+    }
+  }, [refreshSignal, fetchSelfSubscription])
 
   const handleRefresh = async () => {
     setRefreshing(true)

@@ -31,6 +31,8 @@ import { useMediaQuery } from '@/hooks'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import { createServerError } from '@/lib/server-error-message'
 
+import { getAdminPlans } from '@/features/subscriptions/api'
+
 import { getRedemptions, searchRedemptions } from '../api'
 import {
   ERROR_MESSAGES,
@@ -55,7 +57,6 @@ function isDisabledRedemptionRow(redemption: Redemption) {
 
 export function RedemptionsTable() {
   const { t } = useTranslation()
-  const columns = useRedemptionsColumns()
   const { refreshTrigger } = useRedemptions()
   const isMobile = useMediaQuery('(max-width: 640px)')
 
@@ -127,6 +128,29 @@ export function RedemptionsTable() {
   })
 
   const redemptions = data?.items || []
+
+  // 订阅兑换码的额度列需要展示套餐标题
+  const { data: adminPlans } = useQuery({
+    queryKey: ['redemption-subscription-plans'],
+    queryFn: async () => {
+      const result = await getAdminPlans()
+      if (!result.success) {
+        throw createServerError(result, t(ERROR_MESSAGES.LOAD_FAILED))
+      }
+      return result.data || []
+    },
+  })
+  const planTitleMap = useMemo(() => {
+    const map = new Map<number, string>()
+    adminPlans?.forEach((record) => {
+      if (record.plan.id) {
+        map.set(Number(record.plan.id), record.plan.title || '')
+      }
+    })
+    return map
+  }, [adminPlans])
+
+  const columns = useRedemptionsColumns(planTitleMap)
 
   const { table } = useDataTable({
     data: redemptions,

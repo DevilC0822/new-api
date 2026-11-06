@@ -128,9 +128,11 @@ func setupRedeemFixture(t *testing.T, quota int) (userId int, key string) {
 func TestRedeemCreditsQuotaExactlyOnce(t *testing.T) {
 	userId, key := setupRedeemFixture(t, 500)
 
-	quota, err := Redeem(key, userId)
+	result, err := Redeem(key, userId)
 	require.NoError(t, err)
-	assert.Equal(t, 500, quota)
+	assert.Equal(t, 500, result.Quota)
+	assert.Equal(t, 0, result.PlanId)
+	assert.Empty(t, result.PlanTitle)
 
 	var user User
 	require.NoError(t, DB.First(&user, "id = ?", userId).Error)
@@ -207,4 +209,177 @@ func TestRedeemConcurrentSingleSuccess(t *testing.T) {
 	var user User
 	require.NoError(t, DB.First(&user, "id = ?", userId).Error)
 	assert.Equal(t, 300, user.Quota, "quota must be credited exactly once")
+}
+
+func setupSubscriptionRedeemFixture(t *testing.T, plan *SubscriptionPlan) (userId int, key string) {
+	t.Helper()
+	require.NoError(t, DB.AutoMigrate(&Redemption{}))
+	require.NoError(t, DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Unscoped().Delete(&Redemption{}).Error)
+	t.Cleanup(func() {
+		require.NoError(t, DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Unscoped().Delete(&Redemption{}).Error)
+		DB.Exec("DELETE FROM users")
+		DB.Exec("DELETE FROM logs")
+		DB.Exec("DELETE FROM subscription_plans")
+		DB.Exec("DELETE FROM user_subscriptions")
+		InvalidateSubscriptionPlanCache(plan.Id)
+	})
+	// 包级套餐缓存可能残留其它测试的同 id 快照
+	InvalidateSubscriptionPlanCache(plan.Id)
+
+	user := &User{Username: "redeem-sub-user", Password: "password", Status: common.UserStatusEnabled, Quota: 0}
+	require.NoError(t, DB.Create(user).Error)
+	require.NoError(t, DB.Create(plan).Error)
+
+	key = "20000000000000000000000000000001"
+	redemption := &Redemption{
+		Name:        "redeem-sub-test",
+		Key:         key,
+		Status:      common.RedemptionCodeStatusEnabled,
+		Quota:       0,
+		CreatedTime: common.GetTimestamp(),
+		PlanId:      plan.Id,
+	}
+	require.NoError(t, DB.Create(redemption).Error)
+	return user.Id, key
+}
+
+func TestRedeemSubscriptionCodeActivatesPlan(t *testing.T) {
+	plan := &SubscriptionPlan{
+		Id:            9201,
+		Title:         "Trial Pro",
+		DurationUnit:  SubscriptionDurationDay,
+		DurationValue: 3,
+		TotalAmount:   2000,
+		AllowedGroups: "vip,trial",
+	}
+	userId, key := setupSubscriptionRedeemFixture(t, plan)
+
+	result, err := Redeem(key, userId)
+	require.NoError(t, err)
+	assert.Equal(t, plan.Id, result.PlanId)
+	assert.Equal(t, "Trial Pro", result.PlanTitle)
+	assert.Equal(t, 0, result.Quota)
+
+	var sub UserSubscription
+	require.NoError(t, DB.Where("user_id = ?", userId).First(&sub).Error)
+	assert.Equal(t, plan.Id, sub.PlanId)
+	assert.Equal(t, "redemption", sub.Source)
+	assert.Equal(t, int64(2000), sub.AmountTotal)
+	assert.Equal(t, int64(0), sub.AmountUsed)
+	assert.Equal(t, "active", sub.Status)
+	assert.Equal(t, "vip,trial", sub.AllowedGroups)
+	assert.Greater(t, sub.EndTime, sub.StartTime)
+
+	var user User
+	require.NoError(t, DB.First(&user, "id = ?", userId).Error)
+	assert.Equal(t, 0, user.Quota, "subscription redemption must not credit wallet quota")
+
+	var redemption Redemption
+	require.NoError(t, DB.First(&redemption, "key = ?", key).Error)
+	assert.Equal(t, common.RedemptionCodeStatusUsed, redemption.Status)
+	assert.Equal(t, userId, redemption.UsedUserId)
+
+	// 重复兑换同一码必须失败
+	_, err = Redeem(key, userId)
+	require.ErrorIs(t, err, ErrRedeemFailed)
+}
+
+func TestRedeemSubscriptionCodeAllowsDisabledPlan(t *testing.T) {
+	plan := &SubscriptionPlan{
+		Id:            9202,
+		Title:         "Disabled Plan",
+		DurationUnit:  SubscriptionDurationDay,
+		DurationValue: 1,
+		TotalAmount:   100,
+		Enabled:       false,
+	}
+	userId, key := setupSubscriptionRedeemFixture(t, plan)
+
+	result, err := Redeem(key, userId)
+	require.NoError(t, err)
+	assert.Equal(t, "Disabled Plan", result.PlanTitle)
+
+	var count int64
+	require.NoError(t, DB.Model(&UserSubscription{}).Where("user_id = ?", userId).Count(&count).Error)
+	assert.Equal(t, int64(1), count)
+}
+
+func TestRedeemSubscriptionCodeWithMissingPlanRollsBack(t *testing.T) {
+	plan := &SubscriptionPlan{
+		Id:            9203,
+		Title:         "Vanishing Plan",
+		DurationUnit:  SubscriptionDurationDay,
+		DurationValue: 1,
+	}
+	userId, key := setupSubscriptionRedeemFixture(t, plan)
+	require.NoError(t, DB.Unscoped().Where("id = ?", plan.Id).Delete(&SubscriptionPlan{}).Error)
+	InvalidateSubscriptionPlanCache(plan.Id)
+
+	result, err := Redeem(key, userId)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	var apiMsg *common.Message
+	require.ErrorAs(t, err, &apiMsg)
+
+	// 事务回滚：码保持可用，不产生订阅
+	var redemption Redemption
+	require.NoError(t, DB.First(&redemption, "key = ?", key).Error)
+	assert.Equal(t, common.RedemptionCodeStatusEnabled, redemption.Status)
+	var count int64
+	require.NoError(t, DB.Model(&UserSubscription{}).Where("user_id = ?", userId).Count(&count).Error)
+	assert.Equal(t, int64(0), count)
+}
+
+// 订阅码 quota 必须落库为 0：quota 列默认值是 100，普通 Create 会忽略零值。
+func TestInsertSubscriptionRedemptionPersistsZeroQuota(t *testing.T) {
+	require.NoError(t, DB.AutoMigrate(&Redemption{}))
+	require.NoError(t, DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Unscoped().Delete(&Redemption{}).Error)
+	t.Cleanup(func() {
+		require.NoError(t, DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Unscoped().Delete(&Redemption{}).Error)
+	})
+
+	redemption := &Redemption{
+		Name:        "sub-zero-quota",
+		Key:         "30000000000000000000000000000001",
+		Status:      common.RedemptionCodeStatusEnabled,
+		Quota:       0,
+		CreatedTime: common.GetTimestamp(),
+		PlanId:      77,
+	}
+	require.NoError(t, redemption.Insert())
+
+	var stored Redemption
+	require.NoError(t, DB.First(&stored, "key = ?", redemption.Key).Error)
+	assert.Equal(t, 0, stored.Quota)
+	assert.Equal(t, 77, stored.PlanId)
+	assert.Equal(t, common.RedemptionCodeStatusEnabled, stored.Status)
+}
+
+func TestRedeemSubscriptionCodeRespectsPurchaseLimit(t *testing.T) {
+	plan := &SubscriptionPlan{
+		Id:                 9204,
+		Title:              "Limited Plan",
+		DurationUnit:       SubscriptionDurationDay,
+		DurationValue:      1,
+		MaxPurchasePerUser: 1,
+	}
+	userId, key := setupSubscriptionRedeemFixture(t, plan)
+	require.NoError(t, DB.Create(&UserSubscription{
+		UserId: userId, PlanId: plan.Id, Status: "active",
+		StartTime: common.GetTimestamp(), EndTime: common.GetTimestamp() + 3600,
+		Source: "order",
+	}).Error)
+
+	result, err := Redeem(key, userId)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	var apiMsg *common.Message
+	require.ErrorAs(t, err, &apiMsg)
+
+	var redemption Redemption
+	require.NoError(t, DB.First(&redemption, "key = ?", key).Error)
+	assert.Equal(t, common.RedemptionCodeStatusEnabled, redemption.Status)
+	var count int64
+	require.NoError(t, DB.Model(&UserSubscription{}).Where("user_id = ?", userId).Count(&count).Error)
+	assert.Equal(t, int64(1), count)
 }

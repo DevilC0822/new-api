@@ -79,6 +79,7 @@ export function Wallet(props: WalletProps) {
   const [selectedCreemProduct, setSelectedCreemProduct] =
     useState<CreemProduct | null>(null)
   const [showSubscriptionPanel, setShowSubscriptionPanel] = useState(true)
+  const [subscriptionRefreshSignal, setSubscriptionRefreshSignal] = useState(0)
 
   const { status } = useStatus()
   const { currency } = useSystemConfig()
@@ -215,10 +216,13 @@ export function Wallet(props: WalletProps) {
   const handleRedeem = async () => {
     if (!redemptionCode) return
 
-    const success = await redeemCode(redemptionCode)
-    if (success) {
+    const result = await redeemCode(redemptionCode)
+    if (result) {
       setRedemptionCode('')
       await fetchUser()
+      if (result.plan_title) {
+        setSubscriptionRefreshSignal((s) => s + 1)
+      }
     }
   }
 
@@ -336,6 +340,7 @@ export function Wallet(props: WalletProps) {
                 onAvailabilityChange={handleSubscriptionAvailabilityChange}
                 userQuota={user?.quota}
                 onPurchaseSuccess={fetchUser}
+                refreshSignal={subscriptionRefreshSignal}
               />
             </div>
 

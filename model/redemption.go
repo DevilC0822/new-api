@@ -23,6 +23,15 @@ type Redemption struct {
 	UsedUserId   int            `json:"used_user_id"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	ExpiredTime  int64          `json:"expired_time" gorm:"bigint"` // 过期时间，0 表示不过期
+	// PlanId > 0 表示订阅兑换码（兑换后开通该套餐）；0 表示额度兑换码
+	PlanId int `json:"plan_id" gorm:"default:0"`
+}
+
+// RedeemResult 是兑换结果：PlanTitle 非空表示订阅码兑换成功，Quota 仅对额度码有效。
+type RedeemResult struct {
+	Quota     int    `json:"quota"`
+	PlanId    int    `json:"plan_id"`
+	PlanTitle string `json:"plan_title"`
 }
 
 func GetAllRedemptions(startIdx int, num int) (redemptions []*Redemption, total int64, err error) {
@@ -133,12 +142,12 @@ func GetRedemptionById(id int) (*Redemption, error) {
 	return &redemption, err
 }
 
-func Redeem(key string, userId int) (quota int, err error) {
+func Redeem(key string, userId int) (*RedeemResult, error) {
 	if key == "" {
-		return 0, errors.New("redemption code not provided")
+		return nil, errors.New("redemption code not provided")
 	}
 	if userId == 0 {
-		return 0, errors.New("invalid user id")
+		return nil, errors.New("invalid user id")
 	}
 	redemption := &Redemption{}
 
@@ -147,7 +156,9 @@ func Redeem(key string, userId int) (quota int, err error) {
 		keyCol = `"key"`
 	}
 	common.RandomSleep()
-	err = DB.Transaction(func(tx *gorm.DB) error {
+	var subscription *UserSubscription
+	var planTitle string
+	err := DB.Transaction(func(tx *gorm.DB) error {
 		err := lockForUpdate(tx).Where(keyCol+" = ?", key).First(redemption).Error
 		if err != nil {
 			return errors.New("invalid redemption code")
@@ -174,27 +185,74 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if result.RowsAffected == 0 {
 			return errors.New("redemption code already used")
 		}
+		if redemption.PlanId > 0 {
+			// 与 CompleteSubscriptionOrder 一致：先锁用户行，使购买次数检查按用户串行。
+			var userRow User
+			if err := lockForUpdate(tx).Select("id").Where("id = ?", userId).First(&userRow).Error; err != nil {
+				return err
+			}
+			// 已发出的码视为承诺：套餐禁用仍可兑换，仅套餐被删除时拒绝。
+			plan, err := getSubscriptionPlanByIdTx(tx, redemption.PlanId)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return common.NewMessage("Subscription plan for this code no longer exists")
+			}
+			if err != nil {
+				return err
+			}
+			subscription, err = CreateUserSubscriptionFromPlanTx(tx, userId, plan, "redemption")
+			if err != nil {
+				return err
+			}
+			planTitle = plan.Title
+			return nil
+		}
 		return creditTopUpQuota(tx, userId, redemption.Quota, nil)
 	})
 	if err != nil {
 		common.SysError(common.LogText("redemption failed: %s", err.Error()))
-		return 0, ErrRedeemFailed
+		// 额度码维持全量兜底（既有契约，防枚举）；订阅码的套餐业务错误
+		// （套餐不存在/购买上限）透传——此时码已验证有效，不泄露码状态。
+		var apiMsg *common.Message
+		if redemption.PlanId > 0 && errors.As(err, &apiMsg) {
+			return nil, apiMsg
+		}
+		return nil, ErrRedeemFailed
+	}
+	if subscription != nil {
+		if subscription.PrevUserGroup != "" {
+			refreshSubscriptionUserGroupCache(userId, common.LogText("subscription redemption"))
+		}
+		RecordLog(userId, LogTypeTopup, common.NewMessage("Subscription activated with redemption code, plan: {{plan}}", map[string]any{"plan": planTitle}))
+		return &RedeemResult{PlanId: redemption.PlanId, PlanTitle: planTitle}, nil
 	}
 	syncCreditUserQuotaCache(userId, redemption.Quota, common.LogText("redemption"))
 	RecordLog(userId, LogTypeTopup, common.NewMessage("Topped up {{quota}} with a redemption code, code ID {{id}}", map[string]any{"quota": logger.FormatQuota(redemption.Quota), "id": redemption.Id}))
-	return redemption.Quota, nil
+	return &RedeemResult{Quota: redemption.Quota}, nil
 }
 
 func (redemption *Redemption) Insert() error {
+	if redemption.PlanId > 0 {
+		if redemption.Quota != 0 {
+			return errors.New("subscription redemption code must have zero quota")
+		}
+		// quota 列带 default:100，struct Create 会忽略零值，改用 map 显式写 0
+		return DB.Model(&Redemption{}).Create(map[string]any{
+			"user_id":      redemption.UserId,
+			"name":         redemption.Name,
+			"key":          redemption.Key,
+			"quota":        0,
+			"created_time": redemption.CreatedTime,
+			"expired_time": redemption.ExpiredTime,
+			"plan_id":      redemption.PlanId,
+		}).Error
+	}
 	if redemption.Quota <= 0 {
 		return errors.New("redemption quota must be positive")
 	}
 	if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
 		return err
 	}
-	var err error
-	err = DB.Create(redemption).Error
-	return err
+	return DB.Create(redemption).Error
 }
 
 func (redemption *Redemption) SelectUpdate() error {
@@ -204,11 +262,17 @@ func (redemption *Redemption) SelectUpdate() error {
 
 // Update Make sure your token's fields is completed, because this will update non-zero values
 func (redemption *Redemption) Update() error {
-	if redemption.Quota <= 0 {
-		return errors.New("redemption quota must be positive")
-	}
-	if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
-		return err
+	if redemption.PlanId > 0 {
+		if redemption.Quota != 0 {
+			return errors.New("subscription redemption code must have zero quota")
+		}
+	} else {
+		if redemption.Quota <= 0 {
+			return errors.New("redemption quota must be positive")
+		}
+		if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
+			return err
+		}
 	}
 	var err error
 	err = DB.Model(redemption).Select("name", "status", "quota", "redeemed_time", "expired_time").Updates(redemption).Error

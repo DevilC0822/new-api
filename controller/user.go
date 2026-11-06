@@ -1301,8 +1301,14 @@ func TopUp(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	quota, err := model.Redeem(req.Key, id)
+	result, err := model.Redeem(req.Key, id)
 	if err != nil {
+		var apiMsg *common.Message
+		if errors.As(err, &apiMsg) {
+			// 码已验证有效，套餐业务错误（上限/套餐不存在）可直接告知
+			common.ApiError(c, apiMsg)
+			return
+		}
 		// 不向用户暴露兑换失败的细分原因，避免攻击者根据错误类型判断兑换码状态。
 		common.ApiErrorT(c, "Redemption failed, please try again later")
 		logger.LogError(c, common.LogText("failed to redeem key %s for user %d: %s", req.Key, id, err.Error()))
@@ -1311,7 +1317,7 @@ func TopUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
-		"data":    quota,
+		"data":    result,
 	})
 }
 
