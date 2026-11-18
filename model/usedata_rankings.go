@@ -18,13 +18,18 @@ type RankingQuotaBucket struct {
 	Tokens    int64  `json:"tokens"`
 }
 
+// rankingTokensExpr 汇总总 token 口径：计费 token 加缓存读/写 token。
+// Anthropic 语义渠道的 prompt_tokens 不含缓存读写，编码客户缓存命中率极高，
+// 只算 token_used 会严重低估真实吞吐。
+const rankingTokensExpr = "coalesce(sum(token_used), 0) + coalesce(sum(cache_read_tokens), 0) + coalesce(sum(cache_creation_tokens), 0)"
+
 func GetRankingQuotaTotals(startTime int64, endTime int64) ([]RankingQuotaTotal, error) {
 	var rows []RankingQuotaTotal
 	query := DB.Table("quota_data").
-		Select("model_name, sum(token_used) as total_tokens").
+		Select("model_name, " + rankingTokensExpr + " as total_tokens").
 		Where("model_name <> ''").
 		Group("model_name").
-		Having("sum(token_used) > 0").
+		Having(rankingTokensExpr + " > 0").
 		Order("total_tokens DESC")
 	query = applyRankingQuotaTimeRange(query, startTime, endTime)
 	err := query.Find(&rows).Error
@@ -38,10 +43,10 @@ func GetRankingQuotaBuckets(startTime int64, endTime int64, bucketSize int64) ([
 	bucketExpr := rankingBucketExpr(bucketSize)
 	var rows []RankingQuotaBucket
 	query := DB.Table("quota_data").
-		Select(fmt.Sprintf("model_name, %s as bucket, sum(token_used) as tokens", bucketExpr)).
+		Select(fmt.Sprintf("model_name, %s as bucket, %s as tokens", bucketExpr, rankingTokensExpr)).
 		Where("model_name <> ''").
 		Group(fmt.Sprintf("model_name, %s", bucketExpr)).
-		Having("sum(token_used) > 0").
+		Having(rankingTokensExpr + " > 0").
 		Order("bucket ASC")
 	query = applyRankingQuotaTimeRange(query, startTime, endTime)
 	err := query.Find(&rows).Error
